@@ -8,12 +8,12 @@ struct ProfileSettingsView: View {
     @AppStorage("appLanguage") private var appLanguage = AppLanguage.russian.rawValue
     @AppStorage("faceIDEnabled") private var faceIDEnabled = false
     @Environment(\.modelContext) private var modelContext
-    @Environment(CloudSyncStatus.self) private var cloudSyncStatus
     @Environment(AppLockController.self) private var appLock
     @Bindable var profile: UserProfile
 
     @State private var draftName: String
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var isPhotoPickerPresented = false
     @State private var isCameraPresented = false
     @State private var isUpdatingFaceID = false
     @State private var errorMessage: String?
@@ -69,10 +69,6 @@ struct ProfileSettingsView: View {
                     .disabled(isUpdatingFaceID)
             }
 
-            Section("iCloud") {
-                iCloudStatus
-            }
-
             Section("О приложении") {
                 Text("Yet Another Habit помогает формировать полезные привычки и отслеживать прогресс.")
                     .foregroundStyle(.secondary)
@@ -85,6 +81,12 @@ struct ProfileSettingsView: View {
         .onChange(of: selectedPhoto) {
             loadSelectedPhoto()
         }
+        .photosPicker(
+            isPresented: $isPhotoPickerPresented,
+            selection: $selectedPhoto,
+            matching: .images,
+            preferredItemEncoding: .automatic
+        )
         .onChange(of: isNameFocused) { wasFocused, isFocused in
             if wasFocused, !isFocused {
                 saveNameIfNeeded()
@@ -149,34 +151,11 @@ struct ProfileSettingsView: View {
         }
     }
 
-    @ViewBuilder
-    private var iCloudStatus: some View {
-        switch cloudSyncStatus.state {
-        case .checking:
-            Label("Проверка iCloud…", systemImage: "icloud")
-        case .available:
-            Label("Синхронизация включена", systemImage: "icloud.fill")
-                .foregroundStyle(.primary, .blue)
-        case .noAccount:
-            Label("Войдите в iCloud для синхронизации", systemImage: "person.crop.circle.badge.exclamationmark")
-        case .restricted:
-            Label("iCloud ограничен на этом устройстве", systemImage: "lock.icloud")
-        case .unavailable:
-            Label("iCloud временно недоступен", systemImage: "icloud.slash")
-        case .localOnly:
-            Label("На Simulator используется локальное хранилище", systemImage: "externaldrive.fill")
-        }
-
-        if cloudSyncStatus.state == .available {
-            Text("Профиль, привычки и прогресс синхронизируются автоматически между вашими устройствами.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        }
-    }
-
     private var avatarMenu: some View {
         Menu {
-            PhotosPicker(selection: $selectedPhoto, matching: .images) {
+            Button {
+                isPhotoPickerPresented = true
+            } label: {
                 Label("Выбрать из медиатеки", systemImage: "photo.on.rectangle")
             }
 
@@ -242,6 +221,10 @@ struct ProfileSettingsView: View {
                     let data = try await selectedPhoto.loadTransferable(type: Data.self),
                     let image = UIImage(data: data)
                 else {
+                    errorMessage = String(
+                        localized: "Не удалось загрузить выбранное фото.",
+                        locale: AppLanguage.selectedLocale
+                    )
                     return
                 }
 

@@ -15,7 +15,10 @@ struct HabitFormView: View {
     private let icons = [
         "checkmark", "figure.run", "book.fill", "drop.fill",
         "heart.fill", "leaf.fill", "moon.fill", "sun.max.fill",
-        "dumbbell.fill", "pills.fill", "brain.head.profile", "cup.and.saucer.fill"
+        "dumbbell.fill", "pills.fill", "brain.head.profile", "cup.and.saucer.fill",
+        "figure.walk", "bicycle", "fork.knife", "waterbottle.fill",
+        "bed.double.fill", "alarm.fill", "pencil", "music.note",
+        "paintpalette.fill", "camera.fill", "cart.fill", "house.fill"
     ]
 
     var body: some View {
@@ -59,61 +62,45 @@ struct HabitFormView: View {
             }
 
             Section("Иконка") {
-                LazyVGrid(
-                    columns: Array(repeating: GridItem(.flexible()), count: 5),
-                    spacing: 12
-                ) {
-                    ForEach(icons, id: \.self) { icon in
-                        Button {
-                            selectedIcon = icon
-                        } label: {
-                            Image(systemName: icon)
-                                .font(.title3)
-                                .frame(width: 36, height: 36)
-                                .foregroundStyle(
-                                    selectedIcon == icon ? .white : selectedColor.color
-                                )
-                                .background {
-                                    Circle().fill(
-                                        selectedIcon == icon
-                                            ? selectedColor.color
-                                            : Color.secondary.opacity(0.12)
-                                    )
+                ScrollView(.horizontal) {
+                    LazyHStack(spacing: 0) {
+                        ForEach(iconPages.indices, id: \.self) { pageIndex in
+                            LazyVGrid(
+                                columns: Array(
+                                    repeating: GridItem(.flexible()),
+                                    count: 6
+                                ),
+                                spacing: 4
+                            ) {
+                                ForEach(iconPages[pageIndex], id: \.self) { icon in
+                                    iconButton(icon)
                                 }
+                            }
+                            .containerRelativeFrame(.horizontal)
                         }
-                        .buttonStyle(.plain)
-                        .frame(minWidth: 44, minHeight: 44)
-                        .accessibilityLabel(icon)
-                        .accessibilityAddTraits(selectedIcon == icon ? .isSelected : [])
                     }
+                    .scrollTargetLayout()
                 }
-                .padding(.vertical, 8)
+                .scrollIndicators(.hidden)
+                .scrollTargetBehavior(.paging)
             }
 
             Section("Цвет") {
-                HStack {
-                    ForEach(HabitColor.allCases) { color in
-                        Button {
-                            selectedColor = color
-                        } label: {
-                            Circle()
-                                .fill(color.color)
-                                .frame(width: 36, height: 36)
-                                .overlay {
-                                    if selectedColor == color {
-                                        Image(systemName: "checkmark")
-                                            .font(.caption.bold())
-                                            .foregroundStyle(.white)
-                                    }
+                ScrollView(.horizontal) {
+                    LazyHStack(spacing: 0) {
+                        ForEach(colorPages.indices, id: \.self) { pageIndex in
+                            HStack {
+                                ForEach(colorPages[pageIndex]) { color in
+                                    colorButton(color)
                                 }
+                            }
+                            .containerRelativeFrame(.horizontal)
                         }
-                        .buttonStyle(.plain)
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                        .accessibilityLabel(color.title)
-                        .accessibilityAddTraits(selectedColor == color ? .isSelected : [])
                     }
+                    .scrollTargetLayout()
                 }
-                .padding(.vertical, 4)
+                .scrollIndicators(.hidden)
+                .scrollTargetBehavior(.paging)
             }
 
             if showsActionButton {
@@ -144,6 +131,62 @@ struct HabitFormView: View {
 
     private var trimmedName: String {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var iconPages: [[String]] {
+        stride(from: 0, to: icons.count, by: 12).map { startIndex in
+            Array(icons[startIndex..<min(startIndex + 12, icons.count)])
+        }
+    }
+
+    private var colorPages: [[HabitColor]] {
+        let colors = HabitColor.allCases
+        return stride(from: 0, to: colors.count, by: 6).map { startIndex in
+            Array(colors[startIndex..<min(startIndex + 6, colors.count)])
+        }
+    }
+
+    private func iconButton(_ icon: String) -> some View {
+        Button {
+            selectedIcon = icon
+        } label: {
+            Image(systemName: icon)
+                .font(.title3)
+                .frame(width: 36, height: 36)
+                .foregroundStyle(selectedIcon == icon ? .white : selectedColor.color)
+                .background {
+                    Circle().fill(
+                        selectedIcon == icon
+                            ? selectedColor.color
+                            : Color.secondary.opacity(0.12)
+                    )
+                }
+        }
+        .buttonStyle(.plain)
+        .frame(minWidth: 44, minHeight: 44)
+        .accessibilityLabel(icon)
+        .accessibilityAddTraits(selectedIcon == icon ? .isSelected : [])
+    }
+
+    private func colorButton(_ color: HabitColor) -> some View {
+        Button {
+            selectedColor = color
+        } label: {
+            Circle()
+                .fill(color.color)
+                .frame(width: 36, height: 36)
+                .overlay {
+                    if selectedColor == color {
+                        Image(systemName: "checkmark")
+                            .font(.caption.bold())
+                            .foregroundStyle(.white)
+                    }
+                }
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, minHeight: 44)
+        .accessibilityLabel(color.title)
+        .accessibilityAddTraits(selectedColor == color ? .isSelected : [])
     }
 
     private func toggleWeekday(_ weekday: Int) {

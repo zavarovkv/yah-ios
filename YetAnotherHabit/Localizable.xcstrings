@@ -8,15 +8,23 @@
             "state": "translated",
             "value": "Return to today"
           }
-        }
-      }
-    },
-    "Войдите в iCloud для синхронизации": {
-      "localizations": {
-        "en": {
+        },
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in to iCloud to sync"
+            "value": "Return to today"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to today"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Return to today"
           }
         }
       }
@@ -24,6 +32,24 @@
     "Вся история выполнения этой привычки будет удалена.": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All completion history for this habit will be deleted."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All completion history for this habit will be deleted."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All completion history for this habit will be deleted."
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "All completion history for this habit will be deleted."
@@ -38,12 +64,48 @@
             "state": "translated",
             "value": "Completed"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed"
+          }
         }
       }
     },
     "Выбрать из медиатеки": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose from Photo Library"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose from Photo Library"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose from Photo Library"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Choose from Photo Library"
@@ -58,12 +120,48 @@
             "state": "translated",
             "value": "Yesterday"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yesterday"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yesterday"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yesterday"
+          }
         }
       }
     },
     "Выберите другой день или измените расписание.": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another day or change the schedule."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another day or change the schedule."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another day or change the schedule."
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Choose another day or change the schedule."
@@ -78,12 +176,48 @@
             "state": "translated",
             "value": "Days of the Week"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days of the Week"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days of the Week"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Days of the Week"
+          }
         }
       }
     },
     "Добавить": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Add"
@@ -98,12 +232,49 @@
             "state": "translated",
             "value": "Add Habit"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Habit"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Habit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Habit"
+          }
         }
       }
     },
     "Друзей пока нет": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No friends yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No friends yet"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No friends yet"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "No friends yet"
@@ -118,12 +289,48 @@
             "state": "translated",
             "value": "Friends"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Friends"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Friends"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Friends"
+          }
         }
       }
     },
     "Завтра": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomorrow"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomorrow"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomorrow"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Tomorrow"
@@ -138,12 +345,49 @@
             "state": "translated",
             "value": "Your friends will appear here later."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your friends will appear here later."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your friends will appear here later."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your friends will appear here later."
+          }
         }
       }
     },
     "Здесь появится прогресс по вашим привычкам.": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your habit progress will appear here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your habit progress will appear here."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your habit progress will appear here."
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Your habit progress will appear here."
@@ -158,12 +402,48 @@
             "state": "translated",
             "value": "Green"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Green"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Green"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Green"
+          }
         }
       }
     },
     "Изменить фото профиля": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change profile photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change profile photo"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change profile photo"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Change profile photo"
@@ -178,12 +458,48 @@
             "state": "translated",
             "value": "Icon"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon"
+          }
         }
       }
     },
     "Имя": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Name"
@@ -198,22 +514,49 @@
             "state": "translated",
             "value": "Red"
           }
-        }
-      }
-    },
-    "На Simulator используется локальное хранилище": {
-      "localizations": {
-        "en": {
+        },
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Local storage is used in Simulator"
+            "value": "Red"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Red"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Red"
           }
         }
       }
     },
     "На этот день привычек нет": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits for this day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits for this day"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits for this day"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "No habits for this day"
@@ -228,12 +571,48 @@
             "state": "translated",
             "value": "Name"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
         }
       }
     },
     "Например, читать 20 минут": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For example, read for 20 minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For example, read for 20 minutes"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For example, read for 20 minutes"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "For example, read for 20 minutes"
@@ -248,12 +627,48 @@
             "state": "translated",
             "value": "Settings"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
         }
       }
     },
     "Не выполнено": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not completed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not completed"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not completed"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Not completed"
@@ -268,12 +683,48 @@
             "state": "translated",
             "value": "Couldn’t open data"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t open data"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t open data"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t open data"
+          }
         }
       }
     },
     "Не удалось открыть настройки": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t open settings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t open settings"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t open settings"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Couldn’t open settings"
@@ -288,12 +739,48 @@
             "state": "translated",
             "value": "Couldn’t save changes"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t save changes"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t save changes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t save changes"
+          }
         }
       }
     },
     "Новая привычка": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Habit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Habit"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Habit"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "New Habit"
@@ -308,12 +795,48 @@
             "state": "translated",
             "value": "OK"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
         }
       }
     },
     "Отмена": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Cancel"
@@ -328,12 +851,48 @@
             "state": "translated",
             "value": "Orange"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orange"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orange"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orange"
+          }
         }
       }
     },
     "Отметить выполненной": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as completed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as completed"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as completed"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Mark as completed"
@@ -348,12 +907,48 @@
             "state": "translated",
             "value": "Mark as not completed"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as not completed"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as not completed"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as not completed"
+          }
         }
       }
     },
     "Повторить": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try Again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try Again"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try Again"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Try Again"
@@ -368,12 +963,49 @@
             "state": "translated",
             "value": "Please try again."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please try again."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please try again."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please try again."
+          }
         }
       }
     },
     "Привычек пока нет": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits yet"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits yet"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "No habits yet"
@@ -388,22 +1020,49 @@
             "state": "translated",
             "value": "Habits"
           }
-        }
-      }
-    },
-    "Проверка iCloud…": {
-      "localizations": {
-        "en": {
+        },
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Checking iCloud…"
+            "value": "Habits"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habits"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habits"
           }
         }
       }
     },
     "Прогресса пока нет": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No progress yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No progress yet"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No progress yet"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "No progress yet"
@@ -418,15 +1077,23 @@
             "state": "translated",
             "value": "Progress"
           }
-        }
-      }
-    },
-    "Профиль, привычки и прогресс синхронизируются автоматически между вашими устройствами.": {
-      "localizations": {
-        "en": {
+        },
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your profile, habits, and progress sync automatically across your devices."
+            "value": "Progress"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progress"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progress"
           }
         }
       }
@@ -434,6 +1101,24 @@
     "Редактирование": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Habit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Habit"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Habit"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Edit Habit"
@@ -448,12 +1133,48 @@
             "state": "translated",
             "value": "Pink"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pink"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pink"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pink"
+          }
         }
       }
     },
     "Синий": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blue"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blue"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blue"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Blue"
@@ -468,6 +1189,24 @@
             "state": "translated",
             "value": "Today"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
         }
       }
     },
@@ -478,15 +1217,23 @@
             "state": "translated",
             "value": "Take a Selfie"
           }
-        }
-      }
-    },
-    "Синхронизация включена": {
-      "localizations": {
-        "en": {
+        },
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sync is enabled"
+            "value": "Take a Selfie"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a Selfie"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a Selfie"
           }
         }
       }
@@ -494,6 +1241,24 @@
     "Создайте первую привычку, чтобы начать.": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create your first habit to get started."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create your first habit to get started."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create your first habit to get started."
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Create your first habit to get started."
@@ -508,12 +1273,48 @@
             "state": "translated",
             "value": "Save"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
         }
       }
     },
     "Удалить фото": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Photo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Photo"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Photo"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Remove Photo"
@@ -528,12 +1329,48 @@
             "state": "translated",
             "value": "Delete"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
         }
       }
     },
     "Удалить привычку": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Habit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Habit"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Habit"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Delete Habit"
@@ -548,12 +1385,48 @@
             "state": "translated",
             "value": "Delete habit?"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete habit?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete habit?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete habit?"
+          }
         }
       }
     },
     "Фиолетовый": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purple"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purple"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purple"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Purple"
@@ -568,25 +1441,23 @@
             "state": "translated",
             "value": "Color"
           }
-        }
-      }
-    },
-    "iCloud временно недоступен": {
-      "localizations": {
-        "en": {
+        },
+        "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "iCloud is temporarily unavailable"
+            "value": "Color"
           }
-        }
-      }
-    },
-    "iCloud ограничен на этом устройстве": {
-      "localizations": {
-        "en": {
+        },
+        "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "iCloud is restricted on this device"
+            "value": "Color"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color"
           }
         }
       }
@@ -594,6 +1465,24 @@
     "Друзей пока нет.": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No friends yet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No friends yet."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No friends yet."
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "No friends yet."
@@ -608,12 +1497,48 @@
             "state": "translated",
             "value": "No habits for this day."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits for this day."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits for this day."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits for this day."
+          }
         }
       }
     },
     "Привычек пока нет.": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits yet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits yet."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits yet."
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "No habits yet."
@@ -628,12 +1553,48 @@
             "state": "translated",
             "value": "No habits for this day."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits for this day."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits for this day."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No habits for this day."
+          }
         }
       }
     },
     "Безопасность": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Security"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Security"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Security"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Security"
@@ -648,12 +1609,48 @@
             "state": "translated",
             "value": "Unlock with Face ID"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock with Face ID"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock with Face ID"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock with Face ID"
+          }
         }
       }
     },
     "Оформление": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Appearance"
@@ -668,12 +1665,48 @@
             "state": "translated",
             "value": "Light"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
         }
       }
     },
     "Системная": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "System"
@@ -688,12 +1721,48 @@
             "state": "translated",
             "value": "Dark"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
+          }
         }
       }
     },
     "Тема": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theme"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theme"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theme"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Theme"
@@ -708,12 +1777,48 @@
             "state": "translated",
             "value": "Language"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
+          }
         }
       }
     },
     "Face ID недоступен или не настроен на этом устройстве.": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID is unavailable or not set up on this device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID is unavailable or not set up on this device."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID is unavailable or not set up on this device."
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Face ID is unavailable or not set up on this device."
@@ -728,12 +1833,48 @@
             "state": "translated",
             "value": "Face ID authentication failed."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID authentication failed."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID authentication failed."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face ID authentication failed."
+          }
         }
       }
     },
     "Приложение заблокировано": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Locked"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Locked"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Locked"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "App Locked"
@@ -748,12 +1889,48 @@
             "state": "translated",
             "value": "Unlock"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock"
+          }
         }
       }
     },
     "Разблокируйте приложение": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock the app"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock the app"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock the app"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Unlock the app"
@@ -768,12 +1945,48 @@
             "state": "translated",
             "value": "Nothing is scheduled for the selected date."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is scheduled for the selected date."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is scheduled for the selected date."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is scheduled for the selected date."
+          }
         }
       }
     },
     "Выполнено за %@": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed in %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed in %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed in %@"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Completed in %@"
@@ -788,12 +2001,48 @@
             "state": "translated",
             "value": "%lld-day streak"
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld-day streak"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld-day streak"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld-day streak"
+          }
         }
       }
     },
     "О приложении": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "About"
@@ -808,12 +2057,48 @@
             "state": "translated",
             "value": "Yet Another Habit helps you build better habits and track your progress."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yet Another Habit helps you build better habits and track your progress."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yet Another Habit helps you build better habits and track your progress."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yet Another Habit helps you build better habits and track your progress."
+          }
         }
       }
     },
     "Версия": {
       "localizations": {
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Version"
@@ -828,6 +2113,24 @@
             "state": "translated",
             "value": "Device owner authentication is unavailable."
           }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device owner authentication is unavailable."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device owner authentication is unavailable."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device owner authentication is unavailable."
+          }
         }
       }
     },
@@ -837,6 +2140,320 @@
           "stringUnit": {
             "state": "translated",
             "value": "Couldn’t Prepare Data"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t Prepare Data"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t Prepare Data"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t Prepare Data"
+          }
+        }
+      }
+    },
+    "%lld %%": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld %%"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld %%"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld %%"
+          }
+        }
+      }
+    },
+    "Бирюзовый": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teal"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teal"
+          }
+        }
+      }
+    },
+    "Выполнено за день": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed today"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed today"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed today"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed today"
+          }
+        }
+      }
+    },
+    "Выполнено за неделю": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed this week"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed this week"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed this week"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed this week"
+          }
+        }
+      }
+    },
+    "Голубой": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cyan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cyan"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cyan"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cyan"
+          }
+        }
+      }
+    },
+    "Жёлтый": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yellow"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yellow"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yellow"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yellow"
+          }
+        }
+      }
+    },
+    "Индиго": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indigo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indigo"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indigo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indigo"
+          }
+        }
+      }
+    },
+    "Коричневый": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brown"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brown"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brown"
+          }
+        }
+      }
+    },
+    "Мятный": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mint"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mint"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mint"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mint"
+          }
+        }
+      }
+    },
+    "Нажмите, чтобы переключить период": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите, чтобы переключить период"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите, чтобы переключить период"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите, чтобы переключить период"
+          }
+        }
+      }
+    },
+    "Не удалось загрузить выбранное фото.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected photo could not be loaded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected photo could not be loaded."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected photo could not be loaded."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected photo could not be loaded."
           }
         }
       }

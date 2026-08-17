@@ -4,6 +4,7 @@ import SwiftUI
 struct DayProgressView: View {
     @Environment(\.calendar) private var calendar
     @Environment(\.locale) private var locale
+    @AppStorage("appLanguage") private var appLanguage = AppLanguage.russian.rawValue
     @Environment(AppDataState.self) private var appDataState
     @Query private var habits: [Habit]
     @Query private var completions: [HabitCompletion]
@@ -37,7 +38,7 @@ struct DayProgressView: View {
                 DateTitleFormatter.title(
                     for: date,
                     calendar: calendar,
-                    locale: locale
+                    locale: selectedLocale
                 )
             )
             .navigationBarTitleDisplayMode(.inline)
@@ -52,6 +53,10 @@ struct DayProgressView: View {
     private var scheduledHabits: [Habit] {
         appDataState.visibleHabits(from: habits)
             .filter { $0.isScheduled(on: date, calendar: calendar) }
+    }
+
+    private var selectedLocale: Locale {
+        AppLanguage(rawValue: appLanguage)?.locale ?? locale
     }
 
     private func isCompleted(_ habit: Habit) -> Bool {

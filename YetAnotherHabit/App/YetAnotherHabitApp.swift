@@ -8,7 +8,6 @@ struct YetAnotherHabitApp: App {
     @AppStorage("appLanguage") private var appLanguage = AppLanguage.russian.rawValue
     @AppStorage("faceIDEnabled") private var faceIDEnabled = false
     @State private var persistence = PersistenceController()
-    @State private var cloudSyncStatus = CloudSyncStatus()
     @State private var appDataState = AppDataState()
     @State private var appLock = AppLockController()
 
@@ -39,7 +38,6 @@ struct YetAnotherHabitApp: App {
                     }
                 }
             }
-            .environment(cloudSyncStatus)
             .environment(appDataState)
             .environment(appLock)
             .preferredColorScheme(
@@ -51,7 +49,6 @@ struct YetAnotherHabitApp: App {
             )
             .task {
                 await updateLockState()
-                await cloudSyncStatus.refresh()
             }
             .onChange(of: scenePhase) { _, phase in
                 switch phase {

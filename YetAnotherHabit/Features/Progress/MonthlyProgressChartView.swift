@@ -2,11 +2,26 @@ import SwiftData
 import SwiftUI
 
 struct MonthlyProgressChartView: View {
+    private enum Period: CaseIterable {
+        case month
+        case week
+        case day
+
+        var next: Period {
+            switch self {
+            case .month: .week
+            case .week: .day
+            case .day: .month
+            }
+        }
+    }
+
     @Environment(\.calendar) private var calendar
     @Environment(\.locale) private var locale
     @Environment(AppDataState.self) private var appDataState
     @Query private var habits: [Habit]
     @Query private var completions: [HabitCompletion]
+    @State private var period: Period = .month
 
     var body: some View {
         VStack(spacing: 14) {
@@ -29,17 +44,24 @@ struct MonthlyProgressChartView: View {
             .frame(width: 150, height: 150)
             .animation(.easeInOut(duration: 0.25), value: progress)
 
-            Text("Выполнено за \(monthTitle)")
+            Text(periodTitle)
                 .font(.body)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.vertical, 20)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                period = period.next
+            }
+        }
+        .accessibilityHint("Нажмите, чтобы переключить период")
         .accessibilityElement(children: .combine)
     }
 
     private var progress: Double {
-        monthlySnapshot.progress
+        snapshot.progress
     }
 
     private var percentValue: Int {
@@ -48,6 +70,18 @@ struct MonthlyProgressChartView: View {
 
     private var monthTitle: String {
         Date.now.formatted(.dateTime.month(.wide).locale(locale))
+    }
+
+    private var periodTitle: String {
+        switch period {
+        case .month:
+            let format = String(localized: "Выполнено за %@", locale: locale)
+            return String(format: format, monthTitle)
+        case .week:
+            return String(localized: "Выполнено за неделю", locale: locale)
+        case .day:
+            return String(localized: "Выполнено за день", locale: locale)
+        }
     }
 
     private var monthDatesThroughToday: [Date] {
@@ -68,9 +102,26 @@ struct MonthlyProgressChartView: View {
         return dates
     }
 
-    private var monthlySnapshot: HabitProgressCalculator.Snapshot {
+    private var weekDatesThroughToday: [Date] {
+        let today = calendar.startOfDay(for: .now)
+        return WeekCalendar.dates(
+            starting: WeekCalendar.startOfWeek(containing: today, calendar: calendar),
+            calendar: calendar
+        )
+        .filter { calendar.startOfDay(for: $0) <= today }
+    }
+
+    private var snapshotDates: [Date] {
+        switch period {
+        case .month: monthDatesThroughToday
+        case .week: weekDatesThroughToday
+        case .day: [calendar.startOfDay(for: .now)]
+        }
+    }
+
+    private var snapshot: HabitProgressCalculator.Snapshot {
         HabitProgressCalculator.snapshot(
-            for: monthDatesThroughToday,
+            for: snapshotDates,
             habits: appDataState.visibleHabits(from: habits),
             completedIdentifiers: appDataState.visibleCompletionIdentifiers(
                 from: Set(completions.map(\.identifier))

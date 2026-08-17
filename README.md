@@ -9,7 +9,7 @@ Yet Another Habit is a native iOS app for building habits, maintaining streaks, 
 - Browse past and upcoming weeks.
 - Track daily and monthly completion progress.
 - Review streaks and read-only history for previous days.
-- Sync data through iCloud on supported devices.
+- Store habits and profile data locally on the device.
 - Protect the app with Face ID or the device passcode.
 - Choose a light, dark, or system appearance.
 - Use the app in Russian or English.
@@ -18,7 +18,6 @@ Yet Another Habit is a native iOS app for building habits, maintaining streaks, 
 
 - SwiftUI
 - SwiftData
-- CloudKit
 - LocalAuthentication
 - Swift Testing
 - Xcode string catalogs
@@ -49,7 +48,7 @@ YetAnotherHabitTests/      Unit and persistence tests
 - macOS with Xcode 16.4 or later
 - iOS 18 or later
 - An Apple Developer account for installation on a physical device
-- An iCloud container and appropriate signing capabilities for CloudKit sync
+- A development team selected in Xcode for installation on a physical device
 
 ## Getting started
 
@@ -64,7 +63,7 @@ YetAnotherHabitTests/      Unit and persistence tests
 3. Select the `YetAnotherHabit` scheme.
 4. Choose an iOS Simulator and run the app with `Cmd+R`.
 
-To run on a physical iPhone, select your development team in **Signing & Capabilities**, connect the device, trust the developer certificate if prompted, and choose the iPhone as the run destination.
+To run on a physical iPhone, select your development team in **Signing & Capabilities**, choose a unique bundle identifier, connect the device, trust the developer certificate if prompted, and choose the iPhone as the run destination.
 
 ## Build and test
 
@@ -90,7 +89,7 @@ GitHub Actions runs the same build and test workflow for pushes and pull request
 
 ## Data and privacy
 
-Habit data and profile settings are stored with SwiftData. On a signed physical-device build, the app can sync supported data through the user's private iCloud database. Photos selected for the avatar remain part of the user's app data. Face ID authentication is handled by iOS; the app never receives or stores biometric data.
+Habit data and profile settings are stored locally with SwiftData. Photos selected for the avatar remain part of the user's local app data. Face ID authentication is handled by iOS; the app never receives or stores biometric data.
 
 ## Localization
 
@@ -99,7 +98,7 @@ User-facing strings belong in the Xcode string catalogs:
 - `YetAnotherHabit/Localizable.xcstrings`
 - `YetAnotherHabit/InfoPlist.xcstrings`
 
-Russian is the default language, and English is fully supported.
+Russian is the default language, with English, Spanish, Brazilian Portuguese, and French also available.
 
 ## Status
 

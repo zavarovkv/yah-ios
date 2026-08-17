@@ -4,6 +4,9 @@ import SwiftUI
 enum AppLanguage: String, CaseIterable, Identifiable {
     case russian = "ru"
     case english = "en"
+    case spanish = "es"
+    case portugueseBrazil = "pt-BR"
+    case french = "fr"
 
     var id: Self { self }
 
@@ -11,6 +14,9 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         switch self {
         case .russian: "Русский"
         case .english: "English"
+        case .spanish: "Español"
+        case .portugueseBrazil: "Português (Brasil)"
+        case .french: "Français"
         }
     }
 

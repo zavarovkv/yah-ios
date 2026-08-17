@@ -37,7 +37,6 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .environment(CloudSyncStatus())
         .environment(AppDataState())
         .environment(AppLockController())
         .modelContainer(
