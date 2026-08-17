@@ -11,18 +11,18 @@ struct ProgressScreen: View {
             VStack(spacing: 0) {
                 ScreenHeader(title: "Прогресс", action: returnToCurrentMonth)
 
+                MonthlyProgressChartView()
+
+                Divider()
+                    .padding(.horizontal)
+
                 MonthCalendarView(
                     selectedDate: $selectedDate,
                     resetID: calendarResetID,
                     onDateSelected: presentDayProgress
                 )
-                    .padding(.top, 20)
+                    .padding(.top, 12)
                     .padding(.bottom, 8)
-
-                Divider()
-                    .padding(.horizontal)
-
-                MonthlyProgressChartView()
             }
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {

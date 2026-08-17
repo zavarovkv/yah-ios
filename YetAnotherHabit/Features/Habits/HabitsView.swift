@@ -4,6 +4,7 @@ import SwiftUI
 struct HabitsView: View {
     @Environment(\.calendar) private var calendar
     @Environment(\.locale) private var locale
+    @AppStorage("appLanguage") private var appLanguage = AppLanguage.russian.rawValue
     @Environment(AppDataState.self) private var appDataState
     @Query(sort: \Habit.createdAt, animation: .default) private var habits: [Habit]
     @Query private var completions: [HabitCompletion]
@@ -37,6 +38,7 @@ struct HabitsView: View {
                             onHabitDeleted: { appDataState.recordDeleted(identifier: $0) },
                             persistenceError: $persistenceError
                         )
+                        .padding(.top, 16)
                         .id(WeekCalendar.dayKey(for: selectedDate, calendar: calendar))
                     }
                 }
@@ -78,7 +80,7 @@ struct HabitsView: View {
                     DateTitleFormatter.title(
                         for: selectedDate,
                         calendar: calendar,
-                        locale: locale
+                        locale: selectedLocale
                     )
                 )
                 .font(.headline)
@@ -109,15 +111,27 @@ struct HabitsView: View {
         displayedHabits.filter { $0.isScheduled(on: selectedDate, calendar: calendar) }
     }
 
+    private var selectedLocale: Locale {
+        AppLanguage(rawValue: appLanguage)?.locale ?? locale
+    }
+
     private var displayedHabits: [Habit] {
         appDataState.visibleHabits(from: habits)
     }
 
     private var progressByDayKey: [String: Double] {
         let today = calendar.startOfDay(for: .now)
+        let visibleDates = (-1...1)
+            .compactMap {
+                WeekCalendar.addWeeks(
+                    $0,
+                    to: displayedWeekStart,
+                    calendar: calendar
+                )
+            }
+            .flatMap { WeekCalendar.dates(starting: $0, calendar: calendar) }
 
-        return WeekCalendar.dates(starting: displayedWeekStart, calendar: calendar)
-            .reduce(into: [:]) { result, date in
+        return visibleDates.reduce(into: [:]) { result, date in
                 guard calendar.startOfDay(for: date) <= today else { return }
 
                 let dayKey = WeekCalendar.dayKey(for: date, calendar: calendar)
