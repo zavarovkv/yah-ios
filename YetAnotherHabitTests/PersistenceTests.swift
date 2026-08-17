@@ -24,6 +24,82 @@ struct PersistenceTests {
     }
 
     @Test
+    func addingHabitKeepsExistingHabits() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+        let firstHabit = Habit(name: "Читать", icon: "book.fill", color: "blue")
+        context.insert(firstHabit)
+        try context.save()
+
+        let secondHabit = Habit(name: "Бегать", icon: "figure.run", color: "green")
+        context.insert(secondHabit)
+        try context.save()
+
+        let habits = try context.fetch(FetchDescriptor<Habit>())
+        #expect(habits.count == 2)
+        #expect(Set(habits.map(\.name)) == ["Читать", "Бегать"])
+    }
+
+    @Test
+    func completionCanBeAddedAndRemovedAfterQueryWouldBeStale() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let date = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 17))
+        )
+        let habit = Habit(name: "Читать", icon: "book.fill", color: "blue")
+        context.insert(habit)
+        try context.save()
+
+        try HabitCompletionStore.setCompleted(
+            true,
+            habit: habit,
+            date: date,
+            calendar: calendar,
+            context: context
+        )
+        #expect(try context.fetch(FetchDescriptor<HabitCompletion>()).count == 1)
+
+        try HabitCompletionStore.setCompleted(
+            false,
+            habit: habit,
+            date: date,
+            calendar: calendar,
+            context: context
+        )
+        #expect(try context.fetch(FetchDescriptor<HabitCompletion>()).isEmpty)
+    }
+
+    @Test
+    func completingHabitIsIdempotentAndRepairsDuplicates() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let date = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 17))
+        )
+        let dayKey = WeekCalendar.dayKey(for: date, calendar: calendar)
+        let habit = Habit(name: "Читать", icon: "book.fill", color: "blue")
+        context.insert(habit)
+        context.insert(HabitCompletion(date: date, dayKey: dayKey, habit: habit))
+        context.insert(HabitCompletion(date: date, dayKey: dayKey, habit: habit))
+        try context.save()
+
+        try HabitCompletionStore.setCompleted(
+            true,
+            habit: habit,
+            date: date,
+            calendar: calendar,
+            context: context
+        )
+
+        #expect(try context.fetch(FetchDescriptor<HabitCompletion>()).count == 1)
+    }
+
+    @Test
     func savesAndFetchesUserProfile() throws {
         let container = try makeContainer()
         let context = container.mainContext
@@ -98,7 +174,7 @@ struct PersistenceTests {
     }
 
     @Test
-    func habitScheduleRespectsWeekdayAndCreationDate() throws {
+    func habitScheduleRespectsWeekdayAndStartDate() throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
         let monday = try #require(
@@ -106,6 +182,9 @@ struct PersistenceTests {
         )
         let tuesday = try #require(
             calendar.date(from: DateComponents(year: 2026, month: 8, day: 18))
+        )
+        let previousMonday = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 10))
         )
         let habit = Habit(
             name: "Читать",
@@ -117,20 +196,21 @@ struct PersistenceTests {
 
         #expect(habit.isScheduled(on: monday, calendar: calendar))
         #expect(!habit.isScheduled(on: tuesday, calendar: calendar))
+        #expect(!habit.isScheduled(on: previousMonday, calendar: calendar))
     }
 
     private func makeContainer() throws -> ModelContainer {
-        let schema = Schema([
-            Habit.self,
-            HabitCompletion.self,
-            UserProfile.self
-        ])
+        let schema = Schema(versionedSchema: AppSchemaV1.self)
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: true,
             cloudKitDatabase: .none
         )
 
-        return try ModelContainer(for: schema, configurations: configuration)
+        return try ModelContainer(
+            for: schema,
+            migrationPlan: AppMigrationPlan.self,
+            configurations: configuration
+        )
     }
 }

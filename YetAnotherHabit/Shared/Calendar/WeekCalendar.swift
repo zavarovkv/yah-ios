@@ -48,7 +48,7 @@ enum WeekCalendar {
 
     static func weekdayTitle(
         forMondayBasedIndex index: Int,
-        locale: Locale = Locale(identifier: "ru_RU")
+        locale: Locale
     ) -> String {
         var calendar = Calendar(identifier: .gregorian)
         calendar.locale = locale

@@ -4,28 +4,29 @@ import SwiftUI
 struct HabitDayListView: View {
     @Environment(\.calendar) private var calendar
     @Environment(\.modelContext) private var modelContext
-    @Query private var completions: [HabitCompletion]
 
     let habits: [Habit]
     let selectedDate: Date
+    let completedIdentifiers: Set<String>
+    let onCompletionChanged: (_ identifier: String, _ isCompleted: Bool) -> Void
+    let onHabitDeleted: (UUID) -> Void
     @Binding var persistenceError: String?
 
     init(
         habits: [Habit],
         selectedDate: Date,
-        calendar: Calendar,
+        completedIdentifiers: Set<String>,
+        onCompletionChanged: @escaping (_ identifier: String, _ isCompleted: Bool) -> Void,
+        onHabitDeleted: @escaping (UUID) -> Void,
         persistenceError: Binding<String?>
     ) {
         self.habits = habits
         self.selectedDate = selectedDate
+        self.completedIdentifiers = completedIdentifiers
+        self.onCompletionChanged = onCompletionChanged
+        self.onHabitDeleted = onHabitDeleted
         _persistenceError = persistenceError
 
-        let dayKey = WeekCalendar.dayKey(for: selectedDate, calendar: calendar)
-        _completions = Query(
-            filter: #Predicate<HabitCompletion> { completion in
-                completion.dayKey == dayKey
-            }
-        )
     }
 
     var body: some View {
@@ -33,51 +34,79 @@ struct HabitDayListView: View {
             ForEach(habits) { habit in
                 HabitRowView(
                     habit: habit,
-                    isCompleted: completion(for: habit) != nil,
-                    onToggleCompletion: { toggleCompletion(for: habit) }
+                    isCompleted: isCompleted(habit),
+                    streak: streak(for: habit),
+                    canToggleCompletion: canChangeCompletion,
+                    onToggleCompletion: { toggleCompletion(for: habit) },
+                    onDeleted: onHabitDeleted
                 )
+                .if(canChangeCompletion) { row in
+                    row
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            Button {
+                                setCompletion(true, for: habit)
+                            } label: {
+                                Label("Выполнено", systemImage: "checkmark")
+                            }
+                            .tint(.green)
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button {
+                                setCompletion(false, for: habit)
+                            } label: {
+                                Label("Не выполнено", systemImage: "xmark")
+                            }
+                            .tint(.gray)
+                        }
+                    }
+                }
             }
-            .onDelete(perform: deleteHabits)
-        }
         .listStyle(.plain)
     }
 
-    private func completion(for habit: Habit) -> HabitCompletion? {
+    private func isCompleted(_ habit: Habit) -> Bool {
+        completedIdentifiers.contains(
+            HabitCompletion.identifier(
+                habitID: habit.identifier,
+                dayKey: WeekCalendar.dayKey(for: selectedDate, calendar: calendar)
+            )
+        )
+    }
+
+    private func streak(for habit: Habit) -> Int {
+        HabitStreakCalculator.streak(
+            for: habit,
+            through: selectedDate,
+            completedIdentifiers: completedIdentifiers,
+            calendar: calendar
+        )
+    }
+
+    private var canChangeCompletion: Bool {
+        calendar.startOfDay(for: selectedDate) <= calendar.startOfDay(for: .now)
+    }
+
+    private func toggleCompletion(for habit: Habit) {
+        setCompletion(!isCompleted(habit), for: habit)
+    }
+
+    private func setCompletion(_ isCompleted: Bool, for habit: Habit) {
+        guard canChangeCompletion else { return }
+
         let identifier = HabitCompletion.identifier(
             habitID: habit.identifier,
             dayKey: WeekCalendar.dayKey(for: selectedDate, calendar: calendar)
         )
-        return completions.first { $0.identifier == identifier }
-    }
 
-    private func toggleCompletion(for habit: Habit) {
-        let dayKey = WeekCalendar.dayKey(for: selectedDate, calendar: calendar)
-        let identifier = HabitCompletion.identifier(habitID: habit.identifier, dayKey: dayKey)
-        let matchingCompletions = completions.filter { $0.identifier == identifier }
-
-        if matchingCompletions.isEmpty {
-            modelContext.insert(
-                HabitCompletion(
-                    date: calendar.startOfDay(for: selectedDate),
-                    dayKey: dayKey,
-                    habit: habit
-                )
-            )
-        } else {
-            matchingCompletions.forEach(modelContext.delete)
-        }
-
-        saveChanges()
-    }
-
-    private func deleteHabits(at offsets: IndexSet) {
-        offsets.map { habits[$0] }.forEach(modelContext.delete)
-        saveChanges()
-    }
-
-    private func saveChanges() {
         do {
-            try modelContext.save()
+            try HabitCompletionStore.setCompleted(
+                isCompleted,
+                habit: habit,
+                date: selectedDate,
+                calendar: calendar,
+                context: modelContext
+            )
+            onCompletionChanged(identifier, isCompleted)
         } catch {
             modelContext.rollback()
             persistenceError = error.localizedDescription

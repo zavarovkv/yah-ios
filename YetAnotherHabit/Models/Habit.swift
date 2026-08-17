@@ -25,12 +25,14 @@ final class Habit {
         self.name = name
         self.icon = icon
         self.color = color
-        self.scheduledWeekdays = scheduledWeekdays
+        self.scheduledWeekdays = Array(
+            Set(scheduledWeekdays.filter { (0..<7).contains($0) })
+        ).sorted()
         self.createdAt = createdAt
     }
 
     func isScheduled(on date: Date, calendar: Calendar) -> Bool {
-        calendar.startOfDay(for: createdAt) <= calendar.startOfDay(for: date)
+        calendar.startOfDay(for: date) >= calendar.startOfDay(for: createdAt)
             && scheduledWeekdays.contains(
                 WeekCalendar.mondayBasedWeekday(for: date, calendar: calendar)
             )

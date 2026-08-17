@@ -39,17 +39,17 @@ final class PersistenceController {
             : .automatic
 #endif
 
-        let schema = Schema([
-            Habit.self,
-            HabitCompletion.self,
-            UserProfile.self
-        ])
+        let schema = Schema(versionedSchema: AppSchemaV1.self)
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: isPreview,
             cloudKitDatabase: cloudKitDatabase
         )
 
-        return try ModelContainer(for: schema, configurations: configuration)
+        return try ModelContainer(
+            for: schema,
+            migrationPlan: AppMigrationPlan.self,
+            configurations: configuration
+        )
     }
 }

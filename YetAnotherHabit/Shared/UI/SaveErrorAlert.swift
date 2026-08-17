@@ -1,12 +1,22 @@
 import SwiftUI
 
 extension View {
-    func saveErrorAlert(_ error: Binding<String?>) -> some View {
-        alert("Не удалось сохранить изменения", isPresented: error.isPresent) {
+    func appErrorAlert(
+        _ title: LocalizedStringKey,
+        error: Binding<String?>
+    ) -> some View {
+        alert(title, isPresented: error.isPresent) {
             Button("ОК", role: .cancel) {}
         } message: {
-            Text(error.wrappedValue ?? String(localized: "Попробуйте ещё раз."))
+            Text(
+                error.wrappedValue
+                    ?? String(localized: "Попробуйте ещё раз.", locale: AppLanguage.selectedLocale)
+            )
         }
+    }
+
+    func saveErrorAlert(_ error: Binding<String?>) -> some View {
+        appErrorAlert("Не удалось сохранить изменения", error: error)
     }
 }
 

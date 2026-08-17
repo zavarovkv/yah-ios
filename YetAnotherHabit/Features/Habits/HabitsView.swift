@@ -4,7 +4,9 @@ import SwiftUI
 struct HabitsView: View {
     @Environment(\.calendar) private var calendar
     @Environment(\.locale) private var locale
-    @Query(sort: \Habit.createdAt) private var habits: [Habit]
+    @Environment(AppDataState.self) private var appDataState
+    @Query(sort: \Habit.createdAt, animation: .default) private var habits: [Habit]
+    @Query private var completions: [HabitCompletion]
 
     @State private var selectedDate = Date.now
     @State private var displayedWeekStart = WeekCalendar.startOfWeek(containing: .now)
@@ -13,38 +15,57 @@ struct HabitsView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                header
+            ZStack {
+                VStack(spacing: 0) {
+                    header
 
-                WeekCalendarPagerView(
-                    displayedWeekStart: $displayedWeekStart,
-                    selectedDate: $selectedDate
-                )
+                    WeekCalendarPagerView(
+                        displayedWeekStart: $displayedWeekStart,
+                        selectedDate: $selectedDate,
+                        progressByDayKey: progressByDayKey
+                    )
+                    .padding(.top, 12)
 
-                Group {
                     if scheduledHabits.isEmpty {
-                        ContentUnavailableView(
-                            habits.isEmpty ? "Привычек пока нет" : "На этот день привычек нет",
-                            systemImage: "checkmark.circle",
-                            description: Text(
-                                habits.isEmpty
-                                    ? "Создайте первую привычку, чтобы начать."
-                                    : "Выберите другой день или измените расписание."
-                            )
-                        )
+                        Spacer()
                     } else {
                         HabitDayListView(
                             habits: scheduledHabits,
                             selectedDate: selectedDate,
-                            calendar: calendar,
+                            completedIdentifiers: completedIdentifiers,
+                            onCompletionChanged: recordCompletionChange,
+                            onHabitDeleted: { appDataState.recordDeleted(identifier: $0) },
                             persistenceError: $persistenceError
                         )
+                        .id(WeekCalendar.dayKey(for: selectedDate, calendar: calendar))
                     }
                 }
+
+                if scheduledHabits.isEmpty {
+                    ScreenEmptyState(
+                        title: displayedHabits.isEmpty
+                            ? "Привычек пока нет."
+                            : "На этот день привычек нет.",
+                        systemImage: "checkmark.circle",
+                        description: displayedHabits.isEmpty
+                            ? "Создайте первую привычку, чтобы начать."
+                            : "Выберите другой день или измените расписание."
+                    )
+                    .allowsHitTesting(false)
+                }
             }
+            .simultaneousGesture(returnToTodayGesture)
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(isPresented: $isPresentingNewHabit) {
-                NewHabitView()
+                NewHabitView(selectedDate: selectedDate) { habit in
+                    appDataState.recordAdded(habit)
+                }
+            }
+            .onChange(of: habits.map(\.identifier)) {
+                reconcileAppDataState()
+            }
+            .onChange(of: completions.map(\.identifier)) {
+                reconcileAppDataState()
             }
             .saveErrorAlert($persistenceError)
         }
@@ -73,9 +94,10 @@ struct HabitsView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.borderedProminent)
                 .buttonBorderShape(.circle)
                 .controlSize(.large)
+                .tint(.accentColor)
                 .accessibilityLabel("Добавить привычку")
             }
         }
@@ -84,13 +106,68 @@ struct HabitsView: View {
     }
 
     private var scheduledHabits: [Habit] {
-        habits.filter { $0.isScheduled(on: selectedDate, calendar: calendar) }
+        displayedHabits.filter { $0.isScheduled(on: selectedDate, calendar: calendar) }
+    }
+
+    private var displayedHabits: [Habit] {
+        appDataState.visibleHabits(from: habits)
+    }
+
+    private var progressByDayKey: [String: Double] {
+        let today = calendar.startOfDay(for: .now)
+
+        return WeekCalendar.dates(starting: displayedWeekStart, calendar: calendar)
+            .reduce(into: [:]) { result, date in
+                guard calendar.startOfDay(for: date) <= today else { return }
+
+                let dayKey = WeekCalendar.dayKey(for: date, calendar: calendar)
+                result[dayKey] = HabitProgressCalculator.progress(
+                    for: date,
+                    habits: displayedHabits,
+                    completedIdentifiers: completedIdentifiers,
+                    calendar: calendar
+                )
+            }
+    }
+
+    private var completedIdentifiers: Set<String> {
+        appDataState.visibleCompletionIdentifiers(
+            from: Set(completions.map(\.identifier))
+        )
+    }
+
+    private func recordCompletionChange(identifier: String, isCompleted: Bool) {
+        appDataState.recordCompletion(identifier: identifier, isCompleted: isCompleted)
+    }
+
+    private func reconcileAppDataState() {
+        appDataState.reconcile(
+            habits: habits,
+            completionIdentifiers: Set(completions.map(\.identifier))
+        )
     }
 
     private func returnToToday() {
         let today = Date.now
         selectedDate = today
         displayedWeekStart = WeekCalendar.startOfWeek(containing: today, calendar: calendar)
+    }
+
+    private var returnToTodayGesture: some Gesture {
+        DragGesture(minimumDistance: 30)
+            .onEnded { value in
+                let translation = value.translation
+                guard
+                    translation.height > 60,
+                    abs(translation.height) > abs(translation.width)
+                else {
+                    return
+                }
+
+                withAnimation {
+                    returnToToday()
+                }
+            }
     }
 
 }

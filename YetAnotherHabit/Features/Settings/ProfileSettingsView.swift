@@ -4,13 +4,18 @@ import SwiftUI
 import UIKit
 
 struct ProfileSettingsView: View {
+    @AppStorage("appTheme") private var appTheme = AppTheme.system.rawValue
+    @AppStorage("appLanguage") private var appLanguage = AppLanguage.russian.rawValue
+    @AppStorage("faceIDEnabled") private var faceIDEnabled = false
     @Environment(\.modelContext) private var modelContext
     @Environment(CloudSyncStatus.self) private var cloudSyncStatus
+    @Environment(AppLockController.self) private var appLock
     @Bindable var profile: UserProfile
 
     @State private var draftName: String
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var isCameraPresented = false
+    @State private var isUpdatingFaceID = false
     @State private var errorMessage: String?
     @State private var avatarTask: Task<Void, Never>?
     @FocusState private var isNameFocused: Bool
@@ -43,8 +48,36 @@ struct ProfileSettingsView: View {
                     .onSubmit(saveNameIfNeeded)
             }
 
+            Section("Оформление") {
+                Picker("Тема", selection: $appTheme) {
+                    ForEach(AppTheme.allCases) { theme in
+                        Text(theme.title).tag(theme.rawValue)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                Picker("Язык", selection: $appLanguage) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(language.title).tag(language.rawValue)
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+
+            Section("Безопасность") {
+                Toggle("Вход по Face ID", isOn: faceIDBinding)
+                    .disabled(isUpdatingFaceID)
+            }
+
             Section("iCloud") {
                 iCloudStatus
+            }
+
+            Section("О приложении") {
+                Text("Yet Another Habit помогает формировать полезные привычки и отслеживать прогресс.")
+                    .foregroundStyle(.secondary)
+
+                LabeledContent("Версия", value: appVersion)
             }
         }
         .contentMargins(.top, 12, for: .scrollContent)
@@ -68,6 +101,52 @@ struct ProfileSettingsView: View {
             saveNameIfNeeded()
         }
         .saveErrorAlert($errorMessage)
+    }
+
+    private var appVersion: String {
+        let version = Bundle.main.object(
+            forInfoDictionaryKey: "CFBundleShortVersionString"
+        ) as? String ?? "—"
+        let build = Bundle.main.object(
+            forInfoDictionaryKey: "CFBundleVersion"
+        ) as? String
+
+        guard let build, !build.isEmpty, build != version else {
+            return version
+        }
+        return "\(version) (\(build))"
+    }
+
+    private var faceIDBinding: Binding<Bool> {
+        Binding(
+            get: { faceIDEnabled },
+            set: { shouldEnable in
+                if shouldEnable {
+                    Task { await enableFaceID() }
+                } else {
+                    faceIDEnabled = false
+                    appLock.unlockWithoutAuthentication()
+                }
+            }
+        )
+    }
+
+    private func enableFaceID() async {
+        isUpdatingFaceID = true
+        defer { isUpdatingFaceID = false }
+
+        guard appLock.verifyFaceIDAvailability() else {
+            faceIDEnabled = false
+            errorMessage = appLock.errorMessage
+            return
+        }
+
+        if await appLock.authenticate() {
+            faceIDEnabled = true
+        } else {
+            faceIDEnabled = false
+            errorMessage = appLock.errorMessage
+        }
     }
 
     @ViewBuilder

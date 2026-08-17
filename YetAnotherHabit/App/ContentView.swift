@@ -31,13 +31,15 @@ struct ContentView: View {
                 maintenanceError = error.localizedDescription
             }
         }
-        .saveErrorAlert($maintenanceError)
+        .appErrorAlert("Не удалось подготовить данные", error: $maintenanceError)
     }
 }
 
 #Preview {
     ContentView()
         .environment(CloudSyncStatus())
+        .environment(AppDataState())
+        .environment(AppLockController())
         .modelContainer(
             for: [Habit.self, HabitCompletion.self, UserProfile.self],
             inMemory: true

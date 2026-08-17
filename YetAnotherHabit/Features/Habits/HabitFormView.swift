@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct HabitFormView: View {
+    @Environment(\.locale) private var locale
     @Binding var name: String
     @Binding var selectedIcon: String
     @Binding var selectedColor: HabitColor
@@ -8,6 +9,8 @@ struct HabitFormView: View {
 
     let actionTitle: LocalizedStringKey
     let action: () -> Void
+    var showsActionButton = true
+    var deleteAction: (() -> Void)?
 
     private let icons = [
         "checkmark", "figure.run", "book.fill", "drop.fill",
@@ -29,7 +32,12 @@ struct HabitFormView: View {
                         Button {
                             toggleWeekday(weekday)
                         } label: {
-                            Text(WeekCalendar.weekdayTitle(forMondayBasedIndex: weekday))
+                            Text(
+                                WeekCalendar.weekdayTitle(
+                                    forMondayBasedIndex: weekday,
+                                    locale: locale
+                                )
+                            )
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(scheduledWeekdays.contains(weekday) ? .white : .primary)
                                 .frame(width: 36, height: 36)
@@ -61,7 +69,7 @@ struct HabitFormView: View {
                         } label: {
                             Image(systemName: icon)
                                 .font(.title3)
-                                .frame(width: 40, height: 40)
+                                .frame(width: 36, height: 36)
                                 .foregroundStyle(
                                     selectedIcon == icon ? .white : selectedColor.color
                                 )
@@ -90,7 +98,7 @@ struct HabitFormView: View {
                         } label: {
                             Circle()
                                 .fill(color.color)
-                                .frame(width: 32, height: 32)
+                                .frame(width: 36, height: 36)
                                 .overlay {
                                     if selectedColor == color {
                                         Image(systemName: "checkmark")
@@ -108,17 +116,28 @@ struct HabitFormView: View {
                 .padding(.vertical, 4)
             }
 
-            Section {
-                Button(action: action) {
-                    Text(actionTitle)
-                        .frame(maxWidth: .infinity)
+            if showsActionButton {
+                Section {
+                    Button(action: action) {
+                        Text(actionTitle)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .tint(selectedColor.color)
+                    .disabled(trimmedName.isEmpty || scheduledWeekdays.isEmpty)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .tint(selectedColor.color)
-                .disabled(trimmedName.isEmpty || scheduledWeekdays.isEmpty)
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
+            }
+
+            if let deleteAction {
+                Section {
+                    Button("Удалить привычку", role: .destructive) {
+                        deleteAction()
+                    }
+                    .frame(maxWidth: .infinity)
+                }
             }
         }
     }

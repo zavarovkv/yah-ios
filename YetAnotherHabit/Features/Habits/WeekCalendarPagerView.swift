@@ -6,11 +6,13 @@ struct WeekCalendarPagerView: View {
 
     @Binding var displayedWeekStart: Date
     @Binding var selectedDate: Date
+    let progressByDayKey: [String: Double]
 
     var body: some View {
         WeekCalendarView(
             weekStart: displayedWeekStart,
-            selectedDate: $selectedDate
+            selectedDate: $selectedDate,
+            progressByDayKey: progressByDayKey
         )
         .padding(.horizontal)
         .padding(.vertical, 4)

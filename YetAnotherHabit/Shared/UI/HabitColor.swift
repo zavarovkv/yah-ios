@@ -23,12 +23,12 @@ enum HabitColor: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .blue: String(localized: "Синий")
-        case .green: String(localized: "Зелёный")
-        case .orange: String(localized: "Оранжевый")
-        case .pink: String(localized: "Розовый")
-        case .purple: String(localized: "Фиолетовый")
-        case .red: String(localized: "Красный")
+        case .blue: String(localized: "Синий", locale: AppLanguage.selectedLocale)
+        case .green: String(localized: "Зелёный", locale: AppLanguage.selectedLocale)
+        case .orange: String(localized: "Оранжевый", locale: AppLanguage.selectedLocale)
+        case .pink: String(localized: "Розовый", locale: AppLanguage.selectedLocale)
+        case .purple: String(localized: "Фиолетовый", locale: AppLanguage.selectedLocale)
+        case .red: String(localized: "Красный", locale: AppLanguage.selectedLocale)
         }
     }
 }
