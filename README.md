@@ -1,2 +1,3 @@
-# yah-ios
-: A modern iOS habit tracker focused on consistency, reflection, and long-term personal growth.
+# Yet Another Habit
+
+An iOS app for building new habits and tracking progress.
