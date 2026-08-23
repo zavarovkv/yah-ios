@@ -3,8 +3,8 @@
 A native, local-first habit tracker for iOS 18+, built entirely with Apple frameworks.
 
 <p align="center">
-  <img src="docs/screenshots/habits.png" alt="Daily habit list with habits and counters" width="300">
-  <img src="docs/screenshots/progress.png" alt="Monthly habit progress" width="300">
+  <img src="docs/screenshots/habits-framed.png" alt="Daily habit list with habits and counters" width="260">
+  <img src="docs/screenshots/progress-framed.png" alt="Monthly habit progress" width="260">
 </p>
 
 ## What it does
