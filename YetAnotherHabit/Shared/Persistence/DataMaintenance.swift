@@ -3,10 +3,14 @@ import SwiftData
 
 @MainActor
 enum DataMaintenance {
-    static func reconcile(context: ModelContext, calendar: Calendar) throws {
+    static func reconcile(
+        context: ModelContext,
+        calendar: Calendar,
+        locale: Locale
+    ) throws {
         try reconcileCompletions(context: context, calendar: calendar)
         let profiles = try context.fetch(FetchDescriptor<UserProfile>())
-        _ = UserProfileReconciler.reconcile(profiles, in: context)
+        _ = UserProfileReconciler.reconcile(profiles, in: context, locale: locale)
         try context.save()
     }
 
@@ -15,9 +19,14 @@ enum DataMaintenance {
         calendar: Calendar
     ) throws {
         let completions = try context.fetch(FetchDescriptor<HabitCompletion>())
-        var identifiers = Set<String>()
+        var canonicalCompletions: [String: HabitCompletion] = [:]
 
         for completion in completions {
+            guard completion.isCompleted, completion.count > 0 else {
+                context.delete(completion)
+                continue
+            }
+
             guard let habit = completion.habit else {
                 context.delete(completion)
                 continue
@@ -30,9 +39,13 @@ enum DataMaintenance {
             )
             completion.dayKey = dayKey
             completion.identifier = identifier
+            completion.date = calendar.startOfDay(for: completion.date)
 
-            if !identifiers.insert(identifier).inserted {
+            if let canonical = canonicalCompletions[identifier] {
+                canonical.count = max(canonical.count, completion.count)
                 context.delete(completion)
+            } else {
+                canonicalCompletions[identifier] = completion
             }
         }
     }

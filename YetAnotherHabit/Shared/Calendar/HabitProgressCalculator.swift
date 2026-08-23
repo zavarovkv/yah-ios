@@ -22,7 +22,10 @@ enum HabitProgressCalculator {
 
         for date in dates {
             let dayKey = WeekCalendar.dayKey(for: date, calendar: calendar)
-            for habit in habits where habit.isScheduled(on: date, calendar: calendar) {
+            for habit in habits
+            where habit.contributesToDailyGoal
+                && habit.isScheduled(on: date, calendar: calendar)
+            {
                 scheduledCount += 1
                 let identifier = HabitCompletion.identifier(
                     habitID: habit.identifier,

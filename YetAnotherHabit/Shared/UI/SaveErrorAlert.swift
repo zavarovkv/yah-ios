@@ -8,10 +8,11 @@ extension View {
         alert(title, isPresented: error.isPresent) {
             Button("ОК", role: .cancel) {}
         } message: {
-            Text(
-                error.wrappedValue
-                    ?? String(localized: "Попробуйте ещё раз.", locale: AppLanguage.selectedLocale)
-            )
+            if let message = error.wrappedValue {
+                Text(message)
+            } else {
+                Text("Попробуйте ещё раз.")
+            }
         }
     }
 

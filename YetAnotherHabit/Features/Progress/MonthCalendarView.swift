@@ -6,14 +6,14 @@ struct MonthCalendarView: View {
     @Environment(\.locale) private var locale
     @Environment(AppDataState.self) private var appDataState
     @Query private var habits: [Habit]
-    @Query private var completions: [HabitCompletion]
+    @Query(filter: #Predicate<HabitCompletion> { $0.isCompleted })
+    private var completions: [HabitCompletion]
 
     @Binding var selectedDate: Date?
     let resetID: Int
     let onDateSelected: (Date) -> Void
     @State private var displayedMonth: Date
-    @GestureState private var dragOffset: CGFloat = 0
-    @State private var transitionOffset: CGFloat = 0
+    @State private var visiblePage: Int? = 0
 
     init(
         selectedDate: Binding<Date?>,
@@ -24,16 +24,30 @@ struct MonthCalendarView: View {
         self.resetID = resetID
         self.onDateSelected = onDateSelected
         _displayedMonth = State(
-            initialValue: Self.monthStart(for: selectedDate.wrappedValue ?? .now)
+            initialValue: MonthGrid.start(
+                of: selectedDate.wrappedValue ?? .now,
+                calendar: .autoupdatingCurrent
+            )
         )
     }
 
     var body: some View {
+        let visibleHabits = appDataState.visibleHabits(from: habits)
+        let visibleCompletionCounts = appDataState.visibleCompletionCounts(
+            from: HabitCompletionIndex.counts(in: completions)
+        )
+        let visibleCompletionIdentifiers = HabitCompletionIndex.identifiers(
+            in: visibleCompletionCounts,
+            habits: visibleHabits
+        )
+
         VStack(spacing: 14) {
             HStack {
                 Button { moveMonth(by: -1) } label: {
                     Image(systemName: "chevron.left")
+                        .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel("Предыдущий месяц")
 
                 Spacer()
 
@@ -44,35 +58,41 @@ struct MonthCalendarView: View {
 
                 Button { moveMonth(by: 1) } label: {
                     Image(systemName: "chevron.right")
+                        .frame(width: 44, height: 44)
                 }
+                .accessibilityLabel("Следующий месяц")
             }
 
-            GeometryReader { geometry in
-                HStack(alignment: .top, spacing: 0) {
-                    monthPage(offset: -1)
-                        .frame(width: geometry.size.width, alignment: .top)
-
-                    monthPage(offset: 0)
-                        .frame(width: geometry.size.width, alignment: .top)
-
-                    monthPage(offset: 1)
-                        .frame(width: geometry.size.width, alignment: .top)
+            ScrollView(.horizontal) {
+                LazyHStack(alignment: .top, spacing: 0) {
+                    ForEach(-1...1, id: \.self) { offset in
+                        monthPage(
+                            offset: offset,
+                            habits: visibleHabits,
+                            completedIdentifiers: visibleCompletionIdentifiers
+                        )
+                            .containerRelativeFrame(.horizontal)
+                            .id(offset)
+                    }
                 }
-                .offset(x: -geometry.size.width + transitionOffset + dragOffset)
-                .contentShape(Rectangle())
-                .gesture(monthSwipeGesture(pageWidth: geometry.size.width))
+                .scrollTargetLayout()
             }
-            .frame(height: 300)
-            .clipped()
+            .scrollIndicators(.hidden)
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $visiblePage)
+            .defaultScrollAnchor(.center)
+            .onScrollPhaseChange { _, newPhase in
+                if newPhase == .idle {
+                    commitVisiblePage()
+                }
+            }
         }
         .padding(.horizontal)
         .contentShape(Rectangle())
-        .onAppear {
-            displayedMonth = Self.monthStart(for: .now, calendar: calendar)
-        }
         .onChange(of: resetID) {
             withAnimation(.easeInOut(duration: 0.2)) {
-                displayedMonth = Self.monthStart(for: .now, calendar: calendar)
+                displayedMonth = MonthGrid.start(of: .now, calendar: calendar)
+                visiblePage = 0
             }
         }
     }
@@ -81,9 +101,16 @@ struct MonthCalendarView: View {
         Array(repeating: GridItem(.flexible()), count: 7)
     }
 
-    private func monthPage(offset: Int) -> some View {
-        let month = monthByAdding(offset, to: displayedMonth)
-
+    private func monthPage(
+        offset: Int,
+        habits: [Habit],
+        completedIdentifiers: Set<String>
+    ) -> some View {
+        let month = MonthGrid.addingMonths(
+            offset,
+            to: displayedMonth,
+            calendar: calendar
+        )
         return LazyVGrid(columns: columns, spacing: 4) {
             ForEach(0..<7, id: \.self) { weekday in
                 Text(WeekCalendar.weekdayTitle(forMondayBasedIndex: weekday, locale: locale))
@@ -91,15 +118,19 @@ struct MonthCalendarView: View {
                     .foregroundStyle(weekday >= 5 ? Color.red.opacity(0.7) : .secondary)
             }
 
-            ForEach(Array(monthCells(for: month).enumerated()), id: \.offset) { _, date in
-                if let date {
+            ForEach(MonthGrid.cells(for: month, calendar: calendar)) { cell in
+                if let date = cell.date {
                     Button {
                         selectedDate = date
                         onDateSelected(date)
                     } label: {
                         ZStack {
-                            if let progress = progress(for: date) {
-                                progressRing(progress)
+                            if let progress = progress(
+                                for: date,
+                                habits: habits,
+                                completedIdentifiers: completedIdentifiers
+                            ) {
+                                CalendarProgressRing(progress: progress)
                             }
 
                             Text(date, format: .dateTime.day())
@@ -112,7 +143,7 @@ struct MonthCalendarView: View {
                                     }
                                 }
                         }
-                        .frame(width: 42, height: 42)
+                        .frame(width: 44, height: 44)
                         .overlay(alignment: .bottom) {
                             if calendar.isDateInToday(date) {
                                 Circle()
@@ -124,61 +155,31 @@ struct MonthCalendarView: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(isFuture(date))
+                    .accessibilityLabel(
+                        date.formatted(
+                            .dateTime
+                                .weekday(.wide)
+                                .day()
+                                .month(.wide)
+                                .year()
+                            .locale(locale)
+                        )
+                    )
+                    .accessibilityValue(
+                        accessibilityProgressValue(
+                            for: date,
+                            habits: habits,
+                            completedIdentifiers: completedIdentifiers
+                        )
+                    )
+                    .accessibilityAddTraits(isSelected(date) ? .isSelected : [])
                 } else {
-                    Color.clear.frame(width: 34, height: 34)
+                    Color.clear
+                        .frame(width: 44, height: 44)
+                        .accessibilityHidden(true)
                 }
             }
         }
-    }
-
-    private func monthSwipeGesture(pageWidth: CGFloat) -> some Gesture {
-        DragGesture(minimumDistance: 30)
-            .updating($dragOffset) { value, state, _ in
-                state = value.translation.width
-            }
-            .onEnded { value in
-                let projectedWidth = value.predictedEndTranslation.width
-                let direction: Int
-
-                if projectedWidth < -50 {
-                    direction = 1
-                } else if projectedWidth > 50 {
-                    direction = -1
-                } else {
-                    transitionOffset = value.translation.width
-                    withAnimation(.snappy) {
-                        transitionOffset = 0
-                    }
-                    return
-                }
-
-                transitionOffset = value.translation.width
-                withAnimation(.easeOut(duration: 0.25), completionCriteria: .logicallyComplete) {
-                    transitionOffset = direction > 0 ? -pageWidth : pageWidth
-                } completion: {
-                    var transaction = Transaction()
-                    transaction.disablesAnimations = true
-                    withTransaction(transaction) {
-                        moveMonth(by: direction)
-                        transitionOffset = 0
-                    }
-                }
-            }
-    }
-
-    private func monthCells(for month: Date) -> [Date?] {
-        guard
-            let range = calendar.range(of: .day, in: .month, for: month),
-            let firstDate = calendar.date(from: calendar.dateComponents([.year, .month], from: month))
-        else {
-            return []
-        }
-
-        let leadingEmptyDays = WeekCalendar.mondayBasedWeekday(for: firstDate, calendar: calendar)
-        let dates = range.compactMap { day in
-            calendar.date(byAdding: .day, value: day - 1, to: firstDate)
-        }
-        return Array(repeating: nil, count: leadingEmptyDays) + dates.map(Optional.some)
     }
 
     private func isSelected(_ date: Date) -> Bool {
@@ -200,56 +201,58 @@ struct MonthCalendarView: View {
         calendar.startOfDay(for: date) > calendar.startOfDay(for: .now)
     }
 
-    private func progress(for date: Date) -> Double? {
+    private func progress(
+        for date: Date,
+        habits: [Habit],
+        completedIdentifiers: Set<String>
+    ) -> Double? {
         guard calendar.startOfDay(for: date) <= calendar.startOfDay(for: .now) else {
             return nil
         }
 
         return HabitProgressCalculator.progress(
             for: date,
-            habits: appDataState.visibleHabits(from: habits),
-            completedIdentifiers: appDataState.visibleCompletionIdentifiers(
-                from: Set(completions.map(\.identifier))
-            ),
+            habits: habits,
+            completedIdentifiers: completedIdentifiers,
             calendar: calendar
         )
     }
 
-    private func progressRing(_ progress: Double) -> some View {
-        ZStack {
-            Circle()
-                .stroke(Color.secondary.opacity(0.35), lineWidth: 3)
-
-            if progress > 0 {
-                Circle()
-                    .trim(from: 0, to: progress)
-                    .stroke(
-                        Color.green,
-                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
-                    )
-                    .rotationEffect(.degrees(-90))
-            }
+    private func accessibilityProgressValue(
+        for date: Date,
+        habits: [Habit],
+        completedIdentifiers: Set<String>
+    ) -> Text {
+        guard let progress = progress(
+            for: date,
+            habits: habits,
+            completedIdentifiers: completedIdentifiers
+        ) else {
+            return Text(verbatim: "")
         }
-        .frame(width: 42, height: 42)
-        .animation(.easeInOut(duration: 0.2), value: progress)
-        .allowsHitTesting(false)
+
+        return Text(
+            progress,
+            format: .percent.precision(.fractionLength(0))
+        )
     }
 
     private func moveMonth(by value: Int) {
-        displayedMonth = monthByAdding(value, to: displayedMonth)
+        displayedMonth = MonthGrid.addingMonths(
+            value,
+            to: displayedMonth,
+            calendar: calendar
+        )
     }
 
-    private func monthByAdding(_ value: Int, to month: Date) -> Date {
-        guard let date = calendar.date(byAdding: .month, value: value, to: month) else {
-            return month
+    private func commitVisiblePage() {
+        guard let visiblePage, visiblePage != 0 else { return }
+
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            moveMonth(by: visiblePage)
+            self.visiblePage = 0
         }
-        return Self.monthStart(for: date, calendar: calendar)
-    }
-
-    private static func monthStart(
-        for date: Date,
-        calendar: Calendar = .autoupdatingCurrent
-    ) -> Date {
-        calendar.date(from: calendar.dateComponents([.year, .month], from: date)) ?? date
     }
 }

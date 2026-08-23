@@ -9,18 +9,18 @@ struct NewHabitView: View {
     let selectedDate: Date
     let onSaved: (Habit) -> Void
 
-    @State private var name = ""
-    @State private var selectedIcon = "checkmark"
-    @State private var selectedColor = HabitColor.blue
-    @State private var scheduledWeekdays = Set(0..<7)
+    @State private var draft: HabitDraft
     @State private var saveError: String?
+
+    init(selectedDate: Date, onSaved: @escaping (Habit) -> Void) {
+        self.selectedDate = selectedDate
+        self.onSaved = onSaved
+        _draft = State(initialValue: .randomized())
+    }
 
     var body: some View {
         HabitFormView(
-            name: $name,
-            selectedIcon: $selectedIcon,
-            selectedColor: $selectedColor,
-            scheduledWeekdays: $scheduledWeekdays,
+            draft: $draft,
             actionTitle: "Добавить",
             action: addHabit
         )
@@ -31,11 +31,8 @@ struct NewHabitView: View {
     }
 
     private func addHabit() {
-        let habit = Habit(
-            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
-            icon: selectedIcon,
-            color: selectedColor.rawValue,
-            scheduledWeekdays: scheduledWeekdays.sorted(),
+        guard draft.isValid else { return }
+        let habit = draft.makeHabit(
             createdAt: calendar.startOfDay(for: selectedDate)
         )
 

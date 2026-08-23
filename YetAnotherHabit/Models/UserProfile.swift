@@ -1,26 +1,56 @@
 import Foundation
 import SwiftData
 
-@Model
-final class UserProfile {
-    static let primaryIdentifier = "primary"
+extension AppSchemaV1 {
+    @Model
+    final class UserProfile {
+        static let primaryIdentifier = "primary"
 
-    var identifier: String = UserProfile.primaryIdentifier
-    var name: String = ""
+        var identifier: String = AppSchemaV1.UserProfile.primaryIdentifier
+        var name: String = ""
 
-    @Attribute(.externalStorage)
-    var avatarData: Data?
+        @Attribute(.externalStorage)
+        var avatarData: Data?
 
-    var updatedAt: Date = Date.now
+        var updatedAt: Date = Date.now
 
-    init(
-        identifier: String = UserProfile.primaryIdentifier,
-        name: String = "",
-        avatarData: Data? = nil
-    ) {
-        self.identifier = identifier
-        self.name = name
-        self.avatarData = avatarData
-        self.updatedAt = .now
+        init(
+            identifier: String = AppSchemaV1.UserProfile.primaryIdentifier,
+            name: String = "",
+            avatarData: Data? = nil
+        ) {
+            self.identifier = identifier
+            self.name = name
+            self.avatarData = avatarData
+            updatedAt = .now
+        }
     }
 }
+
+extension AppSchemaV2 {
+    @Model
+    final class UserProfile {
+        static let primaryIdentifier = "primary"
+
+        var identifier: String = AppSchemaV2.UserProfile.primaryIdentifier
+        var name: String = ""
+
+        @Attribute(.externalStorage)
+        var avatarData: Data?
+
+        var updatedAt: Date = Date.now
+
+        init(
+            identifier: String = AppSchemaV2.UserProfile.primaryIdentifier,
+            name: String = "",
+            avatarData: Data? = nil
+        ) {
+            self.identifier = identifier
+            self.name = name
+            self.avatarData = avatarData
+            updatedAt = .now
+        }
+    }
+}
+
+typealias UserProfile = AppSchemaV2.UserProfile

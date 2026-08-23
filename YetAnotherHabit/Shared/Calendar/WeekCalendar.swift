@@ -52,7 +52,8 @@ enum WeekCalendar {
     ) -> String {
         var calendar = Calendar(identifier: .gregorian)
         calendar.locale = locale
-        let sundayBasedIndex = (index + 1) % 7
+        let normalizedIndex = ((index % 7) + 7) % 7
+        let sundayBasedIndex = (normalizedIndex + 1) % 7
         let symbol = calendar.shortStandaloneWeekdaySymbols[sundayBasedIndex]
         return symbol.prefix(1).uppercased(with: locale) + symbol.dropFirst()
     }

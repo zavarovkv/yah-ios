@@ -8,28 +8,19 @@ struct EditHabitView: View {
     let habit: Habit
     let onDeleted: (UUID) -> Void
 
-    @State private var name: String
-    @State private var selectedIcon: String
-    @State private var selectedColor: HabitColor
-    @State private var scheduledWeekdays: Set<Int>
+    @State private var draft: HabitDraft
     @State private var saveError: String?
     @State private var isConfirmingDeletion = false
 
     init(habit: Habit, onDeleted: @escaping (UUID) -> Void) {
         self.habit = habit
         self.onDeleted = onDeleted
-        _name = State(initialValue: habit.name)
-        _selectedIcon = State(initialValue: habit.icon)
-        _selectedColor = State(initialValue: HabitColor(rawValue: habit.color) ?? .blue)
-        _scheduledWeekdays = State(initialValue: Set(habit.scheduledWeekdays))
+        _draft = State(initialValue: HabitDraft(habit: habit))
     }
 
     var body: some View {
         HabitFormView(
-            name: $name,
-            selectedIcon: $selectedIcon,
-            selectedColor: $selectedColor,
-            scheduledWeekdays: $scheduledWeekdays,
+            draft: $draft,
             actionTitle: "Сохранить",
             action: saveHabit,
             showsActionButton: false,
@@ -40,7 +31,7 @@ struct EditHabitView: View {
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Сохранить", action: saveHabit)
-                    .disabled(trimmedName.isEmpty || scheduledWeekdays.isEmpty)
+                    .disabled(!draft.isValid)
             }
         }
         .alert(
@@ -56,10 +47,8 @@ struct EditHabitView: View {
     }
 
     private func saveHabit() {
-        habit.name = trimmedName
-        habit.icon = selectedIcon
-        habit.color = selectedColor.rawValue
-        habit.scheduledWeekdays = scheduledWeekdays.sorted()
+        guard draft.isValid else { return }
+        draft.apply(to: habit)
 
         do {
             try modelContext.save()
@@ -82,9 +71,5 @@ struct EditHabitView: View {
             modelContext.rollback()
             saveError = error.localizedDescription
         }
-    }
-
-    private var trimmedName: String {
-        name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

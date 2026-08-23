@@ -4,29 +4,33 @@ import SwiftUI
 struct DayProgressView: View {
     @Environment(\.calendar) private var calendar
     @Environment(\.locale) private var locale
-    @AppStorage("appLanguage") private var appLanguage = AppLanguage.russian.rawValue
     @Environment(AppDataState.self) private var appDataState
     @Query private var habits: [Habit]
-    @Query private var completions: [HabitCompletion]
+    @Query(filter: #Predicate<HabitCompletion> { $0.isCompleted })
+    private var completions: [HabitCompletion]
 
     let date: Date
-    let onWillDismiss: () -> Void
 
     var body: some View {
+        let identifiers = completedIdentifiers
+
         NavigationStack {
             Group {
                 if scheduledHabits.isEmpty {
-                    ScreenEmptyState(
-                        title: "Привычек на этот день нет.",
+                    ContentUnavailableView(
+                        "Привычек на этот день нет.",
                         systemImage: "checkmark.circle",
-                        description: "Для выбранной даты ничего не запланировано."
+                        description: Text("Для выбранной даты ничего не запланировано.")
                     )
                 } else {
                     List(scheduledHabits) { habit in
                         ReadOnlyHabitRowView(
                             habit: habit,
-                            isCompleted: isCompleted(habit),
-                            streak: streak(for: habit)
+                            count: count(for: habit),
+                            streak: streak(
+                                for: habit,
+                                completedIdentifiers: identifiers
+                            )
                         )
                     }
                     .listStyle(.plain)
@@ -38,39 +42,37 @@ struct DayProgressView: View {
                 DateTitleFormatter.title(
                     for: date,
                     calendar: calendar,
-                    locale: selectedLocale
+                    locale: locale
                 )
             )
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color(uiColor: .systemBackground), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .background(
-                SheetDismissObserver(onWillDismiss: onWillDismiss)
-            )
         }
     }
 
     private var scheduledHabits: [Habit] {
-        appDataState.visibleHabits(from: habits)
-            .filter { $0.isScheduled(on: date, calendar: calendar) }
+        let visibleHabits = appDataState.visibleHabits(from: habits)
+        return HabitDaySorter.sorted(
+            visibleHabits.filter { $0.isScheduled(on: date, calendar: calendar) },
+            for: date,
+            completionCounts: completionCounts,
+            calendar: calendar
+        )
     }
 
-    private var selectedLocale: Locale {
-        AppLanguage(rawValue: appLanguage)?.locale ?? locale
-    }
-
-    private func isCompleted(_ habit: Habit) -> Bool {
+    private func count(for habit: Habit) -> Int {
         let identifier = HabitCompletion.identifier(
             habitID: habit.identifier,
             dayKey: WeekCalendar.dayKey(for: date, calendar: calendar)
         )
-        let identifiers = appDataState.visibleCompletionIdentifiers(
-            from: Set(completions.map(\.identifier))
-        )
-        return identifiers.contains(identifier)
+        return completionCounts[identifier, default: 0]
     }
 
-    private func streak(for habit: Habit) -> Int {
+    private func streak(
+        for habit: Habit,
+        completedIdentifiers: Set<String>
+    ) -> Int {
         HabitStreakCalculator.streak(
             for: habit,
             through: date,
@@ -80,8 +82,15 @@ struct DayProgressView: View {
     }
 
     private var completedIdentifiers: Set<String> {
-        appDataState.visibleCompletionIdentifiers(
-            from: Set(completions.map(\.identifier))
+        HabitCompletionIndex.identifiers(
+            in: completionCounts,
+            habits: appDataState.visibleHabits(from: habits)
+        )
+    }
+
+    private var completionCounts: [String: Int] {
+        appDataState.visibleCompletionCounts(
+            from: HabitCompletionIndex.counts(in: completions)
         )
     }
 }

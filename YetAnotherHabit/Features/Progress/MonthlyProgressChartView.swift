@@ -2,16 +2,18 @@ import SwiftData
 import SwiftUI
 
 struct MonthlyProgressChartView: View {
-    private enum Period: CaseIterable {
-        case month
-        case week
+    private enum Period: CaseIterable, Identifiable {
         case day
+        case week
+        case month
 
-        var next: Period {
+        var id: Self { self }
+
+        var title: LocalizedStringKey {
             switch self {
-            case .month: .week
-            case .week: .day
-            case .day: .month
+            case .day: "День"
+            case .week: "Неделя"
+            case .month: "Месяц"
             }
         }
     }
@@ -20,11 +22,23 @@ struct MonthlyProgressChartView: View {
     @Environment(\.locale) private var locale
     @Environment(AppDataState.self) private var appDataState
     @Query private var habits: [Habit]
-    @Query private var completions: [HabitCompletion]
+    @Query(filter: #Predicate<HabitCompletion> { $0.isCompleted })
+    private var completions: [HabitCompletion]
     @State private var period: Period = .month
 
     var body: some View {
+        let progress = snapshot.progress
+        let percentValue = Int((progress * 100).rounded())
+
         VStack(spacing: 14) {
+            Picker("Период", selection: $period) {
+                ForEach(Period.allCases) { period in
+                    Text(period.title).tag(period)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 24)
+
             ZStack {
                 Circle()
                     .stroke(Color.secondary.opacity(0.14), lineWidth: 14)
@@ -48,24 +62,8 @@ struct MonthlyProgressChartView: View {
                 .font(.body)
                 .foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.vertical, 20)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            withAnimation(.easeInOut(duration: 0.25)) {
-                period = period.next
-            }
-        }
-        .accessibilityHint("Нажмите, чтобы переключить период")
-        .accessibilityElement(children: .combine)
-    }
-
-    private var progress: Double {
-        snapshot.progress
-    }
-
-    private var percentValue: Int {
-        Int((progress * 100).rounded())
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
     }
 
     private var monthTitle: String {
@@ -75,12 +73,12 @@ struct MonthlyProgressChartView: View {
     private var periodTitle: String {
         switch period {
         case .month:
-            let format = String(localized: "Выполнено за %@", locale: locale)
-            return String(format: format, monthTitle)
+            let format = AppLocalization.string("Выполнено за %@", locale: locale)
+            return String(format: format, locale: locale, monthTitle)
         case .week:
-            return String(localized: "Выполнено за неделю", locale: locale)
+            return AppLocalization.string("Выполнено за неделю", locale: locale)
         case .day:
-            return String(localized: "Выполнено за день", locale: locale)
+            return AppLocalization.string("Выполнено за день", locale: locale)
         }
     }
 
@@ -120,11 +118,17 @@ struct MonthlyProgressChartView: View {
     }
 
     private var snapshot: HabitProgressCalculator.Snapshot {
-        HabitProgressCalculator.snapshot(
+        let visibleHabits = appDataState.visibleHabits(from: habits)
+        let visibleCounts = appDataState.visibleCompletionCounts(
+            from: HabitCompletionIndex.counts(in: completions)
+        )
+
+        return HabitProgressCalculator.snapshot(
             for: snapshotDates,
-            habits: appDataState.visibleHabits(from: habits),
-            completedIdentifiers: appDataState.visibleCompletionIdentifiers(
-                from: Set(completions.map(\.identifier))
+            habits: visibleHabits,
+            completedIdentifiers: HabitCompletionIndex.identifiers(
+                in: visibleCounts,
+                habits: visibleHabits
             ),
             calendar: calendar
         )

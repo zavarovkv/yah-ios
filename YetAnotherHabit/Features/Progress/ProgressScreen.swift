@@ -1,35 +1,47 @@
 import SwiftUI
 
 struct ProgressScreen: View {
+    private struct PresentedDay: Identifiable {
+        let date: Date
+
+        var id: Date { date }
+    }
+
     @State private var selectedDate: Date?
-    @State private var presentedDate = Date.now
+    @State private var presentedDay: PresentedDay?
     @State private var calendarResetID = 0
-    @State private var isPresentingDayProgress = false
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                ScreenHeader(title: "Прогресс", action: returnToCurrentMonth)
+            ScrollView {
+                VStack(spacing: 0) {
+                    MonthlyProgressChartView()
 
-                MonthlyProgressChartView()
+                    Divider()
+                        .padding(.horizontal)
 
-                Divider()
-                    .padding(.horizontal)
-
-                MonthCalendarView(
-                    selectedDate: $selectedDate,
-                    resetID: calendarResetID,
-                    onDateSelected: presentDayProgress
-                )
+                    MonthCalendarView(
+                        selectedDate: $selectedDate,
+                        resetID: calendarResetID,
+                        onDateSelected: presentDayProgress
+                    )
                     .padding(.top, 12)
                     .padding(.bottom, 8)
+                }
             }
-            .toolbar(.hidden, for: .navigationBar)
-            .onAppear {
-                returnToCurrentMonth()
+            .scrollBounceBehavior(.basedOnSize)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Button("Прогресс", action: returnToCurrentMonth)
+                        .font(.headline)
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Вернуться к текущему месяцу")
+                }
             }
-            .sheet(isPresented: $isPresentingDayProgress, onDismiss: clearSelection) {
-                DayProgressView(date: presentedDate, onWillDismiss: clearSelection)
+            .sheet(item: $presentedDay, onDismiss: clearSelection) { selection in
+                DayProgressView(date: selection.date)
                     .presentationDetents([.medium, .large])
                     .presentationDragIndicator(.visible)
                     .presentationBackground(Color(uiColor: .systemBackground))
@@ -44,8 +56,7 @@ struct ProgressScreen: View {
 
     private func presentDayProgress(_ date: Date) {
         selectedDate = date
-        presentedDate = date
-        isPresentingDayProgress = true
+        presentedDay = PresentedDay(date: date)
     }
 
     private func clearSelection() {

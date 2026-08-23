@@ -2,61 +2,73 @@ import SwiftUI
 
 struct HabitRowView: View {
     let habit: Habit
-    let isCompleted: Bool
+    let count: Int
     let streak: Int
-    let canToggleCompletion: Bool
+    let canChangeCompletion: Bool
     let onToggleCompletion: () -> Void
-    let onDeleted: (UUID) -> Void
+    let onCountChanged: (Int) -> Void
+    let onOpenAnalytics: () -> Void
+
+    private var isCompleted: Bool {
+        habit.contributesToDailyGoal && habit.isGoalMet(by: count)
+    }
 
     var body: some View {
         HStack(spacing: 12) {
-            Button(action: onToggleCompletion) {
-                Image(systemName: isCompleted ? "checkmark" : habit.icon)
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .frame(width: 40, height: 40)
-                    .background(
-                        isCompleted ? Color.white.opacity(0.22) : color,
-                        in: Circle()
-                    )
-                    .opacity(isCompleted ? 1 : 0.55)
+            leadingIcon
+
+            Button(action: onOpenAnalytics) {
+                HabitSummaryView(
+                    habit: habit,
+                    isCompleted: isCompleted,
+                    streak: streak,
+                    count: count
+                )
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .allowsHitTesting(canToggleCompletion)
-            .accessibilityLabel(isCompleted ? "Отметить невыполненной" : "Отметить выполненной")
-            .accessibilityRespondsToUserInteraction(canToggleCompletion)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(1)
+            .accessibilityHint("Открыть аналитику привычки")
 
-            NavigationLink {
-                EditHabitView(habit: habit, onDeleted: onDeleted)
-            } label: {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(habit.name)
-                        .font(.body.weight(.medium))
-
-                    if isCompleted, streak >= 2 {
-                        Text("Серия из \(streak) дней")
-                            .font(.caption)
-                            .foregroundStyle(Color.white.opacity(0.8))
-                    }
+            if habit.kind == .counter, canChangeCompletion {
+                Stepper(
+                    value: Binding(
+                        get: { count },
+                        set: onCountChanged
+                    ),
+                    in: 0...HabitCompletionStore.maximumDailyCount
+                ) {
+                    EmptyView()
                 }
-                .foregroundStyle(isCompleted ? .white : .primary)
+                .labelsHidden()
+                .fixedSize()
+                .sensoryFeedback(.selection, trigger: count)
+                .accessibilityLabel("Количество")
+                .accessibilityValue(Text(count, format: .number))
             }
-            .tint(isCompleted ? .white : .primary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(isCompleted ? color : color.opacity(0.12))
-        }
+        .habitCardStyle(habit: habit, isCompleted: isCompleted)
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
-        .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
         .animation(.easeInOut(duration: 0.2), value: isCompleted)
+        .animation(.easeInOut(duration: 0.2), value: count)
     }
 
-    private var color: Color {
-        HabitColor(rawValue: habit.color)?.color ?? .blue
+    @ViewBuilder
+    private var leadingIcon: some View {
+        if habit.kind == .habit, canChangeCompletion {
+            Button(action: onToggleCompletion) {
+                HabitStatusIconView(habit: habit, isCompleted: isCompleted)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(isCompleted ? "Не выполнено" : "Выполнено")
+        } else {
+            HabitStatusIconView(
+                habit: habit,
+                isCompleted: isCompleted
+            )
+            .accessibilityHidden(true)
+        }
     }
 }

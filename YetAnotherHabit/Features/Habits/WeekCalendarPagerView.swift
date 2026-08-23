@@ -2,8 +2,8 @@ import SwiftUI
 
 struct WeekCalendarPagerView: View {
     @Environment(\.calendar) private var calendar
-    @GestureState private var dragOffset: CGFloat = 0
-    @State private var transitionOffset: CGFloat = 0
+    @State private var visiblePage: Int? = 0
+    @State private var isPagingByGesture = false
 
     @Binding var displayedWeekStart: Date
     @Binding var selectedDate: Date
@@ -11,21 +11,35 @@ struct WeekCalendarPagerView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            HStack(spacing: 0) {
-                weekPage(offset: -1)
-                    .frame(width: geometry.size.width)
-
-                weekPage(offset: 0)
-                    .frame(width: geometry.size.width)
-
-                weekPage(offset: 1)
-                    .frame(width: geometry.size.width)
+            ScrollView(.horizontal) {
+                HStack(spacing: 0) {
+                    ForEach(-1...1, id: \.self) { offset in
+                        weekPage(offset: offset)
+                            .frame(width: geometry.size.width)
+                            .id(offset)
+                    }
+                }
+                .scrollTargetLayout()
             }
-            .offset(
-                x: -geometry.size.width + transitionOffset + dragOffset
-            )
-            .contentShape(Rectangle())
-            .gesture(weekSwipeGesture(pageWidth: geometry.size.width))
+            .scrollIndicators(.hidden)
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $visiblePage, anchor: .center)
+            .defaultScrollAnchor(.center)
+            .onScrollPhaseChange { _, newPhase in
+                if newPhase == .tracking || newPhase == .interacting {
+                    isPagingByGesture = true
+                } else if newPhase == .idle, isPagingByGesture {
+                    isPagingByGesture = false
+                    commitVisiblePage()
+                } else if newPhase == .idle {
+                    recenterPage()
+                }
+            }
+            .onChange(of: visiblePage) { _, newValue in
+                guard !isPagingByGesture, newValue != 0 else { return }
+                recenterPage()
+            }
+            .onAppear(perform: recenterPage)
         }
         .clipped()
         .frame(height: 72, alignment: .top)
@@ -58,43 +72,25 @@ struct WeekCalendarPagerView: View {
         }
     }
 
-    private func weekSwipeGesture(pageWidth: CGFloat) -> some Gesture {
-        DragGesture()
-            .updating($dragOffset) { value, state, _ in
-                state = value.translation.width
-            }
-            .onEnded { value in
-                let threshold: CGFloat = 50
-                let projectedWidth = value.predictedEndTranslation.width
-                let direction: Int
+    private func commitVisiblePage() {
+        guard let visiblePage, visiblePage != 0 else { return }
 
-                if projectedWidth < -threshold {
-                    direction = 1
-                } else if projectedWidth > threshold {
-                    direction = -1
-                } else {
-                    transitionOffset = value.translation.width
-                    withAnimation(.snappy) {
-                        transitionOffset = 0
-                    }
-                    return
-                }
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            moveWeek(by: visiblePage)
+            self.visiblePage = 0
+        }
+    }
 
-                transitionOffset = value.translation.width
-                withAnimation(
-                    .easeOut(duration: 0.25),
-                    completionCriteria: .logicallyComplete
-                ) {
-                    transitionOffset = direction > 0 ? -pageWidth : pageWidth
-                } completion: {
-                    var transaction = Transaction()
-                    transaction.disablesAnimations = true
-                    withTransaction(transaction) {
-                        moveWeek(by: direction)
-                        transitionOffset = 0
-                    }
-                }
-            }
+    private func recenterPage() {
+        guard visiblePage != 0 else { return }
+
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            visiblePage = 0
+        }
     }
 
     private func moveWeek(by value: Int) {

@@ -1,6 +1,8 @@
 import SwiftUI
 import UIKit
 
+// SwiftUI's PhotosPicker only covers the photo library. UIImagePickerController
+// remains the native system camera UI, kept behind this narrow adapter.
 struct CameraPicker: UIViewControllerRepresentable {
     let onImagePicked: (UIImage) -> Void
 

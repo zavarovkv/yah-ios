@@ -31,7 +31,7 @@ final class PersistenceController {
         let isPreview = environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
             || environment["XCODE_RUNNING_FOR_PLAYGROUNDS"] == "1"
 
-        let schema = Schema(versionedSchema: AppSchemaV1.self)
+        let schema = Schema(versionedSchema: AppSchemaV3.self)
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: isPreview,

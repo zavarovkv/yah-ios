@@ -88,4 +88,64 @@ struct WeekCalendarTests {
 
         #expect(calendar.isDate(selected, inSameDayAs: now))
     }
+
+    @Test func monthGridStartsAtMondayColumnAndUsesStablePositions() throws {
+        let august = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 15))
+        )
+
+        let cells = MonthGrid.cells(for: august, calendar: calendar)
+
+        #expect(cells.count == 36)
+        #expect(cells.map(\.id) == Array(0..<36))
+        #expect(cells.prefix(5).allSatisfy { $0.date == nil })
+        #expect(calendar.component(.day, from: try #require(cells[5].date)) == 1)
+    }
+
+    @Test func addingMonthsNormalizesAcrossYearBoundary() throws {
+        let december = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 12, day: 18))
+        )
+
+        let january = MonthGrid.addingMonths(1, to: december, calendar: calendar)
+        let components = calendar.dateComponents([.year, .month, .day], from: january)
+
+        #expect(components == DateComponents(year: 2027, month: 1, day: 1))
+    }
+
+    @Test func habitStatusCanOnlyChangeTodayAndYesterday() throws {
+        let today = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 23))
+        )
+        let yesterday = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 22))
+        )
+        let twoDaysAgo = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 21))
+        )
+        let tomorrow = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 24))
+        )
+
+        #expect(HabitDayPolicy.canChangeStatus(on: today, today: today, calendar: calendar))
+        #expect(HabitDayPolicy.canChangeStatus(on: yesterday, today: today, calendar: calendar))
+        #expect(!HabitDayPolicy.canChangeStatus(on: twoDaysAgo, today: today, calendar: calendar))
+        #expect(!HabitDayPolicy.canChangeStatus(on: tomorrow, today: today, calendar: calendar))
+    }
+
+    @Test func historicalHabitDaysStartTwoDaysBeforeToday() throws {
+        let today = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 23))
+        )
+        let yesterday = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 22))
+        )
+        let twoDaysAgo = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 21))
+        )
+
+        #expect(!HabitDayPolicy.isHistorical(today, today: today, calendar: calendar))
+        #expect(!HabitDayPolicy.isHistorical(yesterday, today: today, calendar: calendar))
+        #expect(HabitDayPolicy.isHistorical(twoDaysAgo, today: today, calendar: calendar))
+    }
 }
