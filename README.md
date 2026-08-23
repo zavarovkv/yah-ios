@@ -1,81 +1,29 @@
 # Yet Another Habit
 
-Yet Another Habit is a native iOS app for building habits, maintaining streaks, and tracking progress over time.
+A native, local-first habit tracker for iOS 18+, built entirely with Apple frameworks.
 
-## Features
+## What it does
 
-- Create and customize habits with schedules, colors, and SF Symbols.
-- Mark habits complete with swipe gestures.
-- Browse past and upcoming weeks.
-- Track daily and monthly completion progress.
-- Review streaks and read-only history for previous days.
-- Store habits and profile data locally on the device.
-- Protect the app with Face ID or the device passcode.
-- Choose a light, dark, or system appearance.
-- Use the app in Russian or English.
+- Tracks regular habits and numeric counters with optional daily goals.
+- Supports custom schedules, colors, and SF Symbols.
+- Keeps incomplete habits visible first and organizes counters and completed items.
+- Provides daily and monthly progress, streaks, and per-habit analytics.
+- Makes past days easy to review while limiting edits to today and yesterday.
+- Protects local data with Face ID or the device passcode.
+- Includes profile customization, system-aware themes, and Dynamic Type-friendly UI.
+- Supports Russian, English, Spanish, French, and Brazilian Portuguese.
 
-## Tech stack
+## Built with
 
-- SwiftUI
-- SwiftData
-- LocalAuthentication
-- Swift Testing
-- Xcode string catalogs
+SwiftUI, SwiftData, Swift Testing, LocalAuthentication, PhotosUI, and Xcode string catalogs. The project has no third-party dependencies and keeps habit and profile data on the device.
 
-The app targets iOS 18 and has no third-party dependencies.
+## Run locally
 
-## Project structure
+1. Open `YetAnotherHabit.xcodeproj` in Xcode 16.4 or later.
+2. Select the `YetAnotherHabit` scheme.
+3. Choose an iOS 18+ simulator and press `Cmd+R`.
 
-```text
-YetAnotherHabit/
-├── App/                 App entry point and root navigation
-├── Features/            Screens grouped by product feature
-│   ├── Habits/
-│   ├── Progress/
-│   ├── Friends/
-│   └── Settings/
-├── Models/              SwiftData models
-├── Shared/              Reusable calendar, persistence, security, and UI code
-├── Assets.xcassets/
-├── Localizable.xcstrings
-└── InfoPlist.xcstrings
-
-YetAnotherHabitTests/      Unit and persistence tests
-```
-
-## Requirements
-
-- macOS with Xcode 16.4 or later
-- iOS 18 or later
-- An Apple Developer account for installation on a physical device
-- A development team selected in Xcode for installation on a physical device
-
-## Getting started
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/zavarovkv/yah-ios.git
-   cd yah-ios
-   ```
-
-2. Open `YetAnotherHabit.xcodeproj` in Xcode.
-3. Select the `YetAnotherHabit` scheme.
-4. Choose an iOS Simulator and run the app with `Cmd+R`.
-
-To run on a physical iPhone, select your development team in **Signing & Capabilities**, choose a unique bundle identifier, connect the device, trust the developer certificate if prompted, and choose the iPhone as the run destination.
-
-## Build and test
-
-List available simulator destinations:
-
-```bash
-xcodebuild -project YetAnotherHabit.xcodeproj \
-  -scheme YetAnotherHabit \
-  -showdestinations
-```
-
-Run the tests by replacing the simulator name when necessary:
+Run tests from Xcode or the command line:
 
 ```bash
 xcodebuild test \
@@ -85,21 +33,12 @@ xcodebuild test \
   CODE_SIGNING_ALLOWED=NO
 ```
 
-GitHub Actions runs the same build and test workflow for pushes and pull requests.
+For a physical device, select your own development team and use a unique bundle identifier.
 
-## Data and privacy
+## Privacy
 
-Habit data and profile settings are stored locally with SwiftData. Photos selected for the avatar remain part of the user's local app data. Face ID authentication is handled by iOS; the app never receives or stores biometric data.
+Habit data, settings, and profile photos stay in the local SwiftData store. Authentication is handled by iOS; the app never receives or stores biometric credentials.
 
-## Localization
+## License
 
-User-facing strings belong in the Xcode string catalogs:
-
-- `YetAnotherHabit/Localizable.xcstrings`
-- `YetAnotherHabit/InfoPlist.xcstrings`
-
-Russian is the default language, with English, Spanish, Brazilian Portuguese, and French also available.
-
-## Status
-
-The project is under active development. The Friends section is currently a placeholder for future functionality.
+Yet Another Habit is available under the [MIT License](LICENSE).
