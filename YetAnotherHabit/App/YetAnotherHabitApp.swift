@@ -4,9 +4,9 @@ import SwiftUI
 @main
 struct YetAnotherHabitApp: App {
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage("appTheme") private var appTheme = AppTheme.system.rawValue
-    @AppStorage("appLanguage") private var appLanguage = AppLanguage.russian.rawValue
-    @AppStorage("faceIDEnabled") private var faceIDEnabled = false
+    @AppStorage(AppPreferenceKey.theme) private var appTheme = AppTheme.system
+    @AppStorage(AppPreferenceKey.language) private var appLanguage = AppLanguage.system
+    @AppStorage(AppPreferenceKey.faceIDEnabled) private var faceIDEnabled = false
     @State private var persistence = PersistenceController()
     @State private var appDataState = AppDataState()
     @State private var appLock = AppLockController()
@@ -21,13 +21,16 @@ struct YetAnotherHabitApp: App {
                         .modelContainer(container)
                 } else {
                     ContentUnavailableView {
-                        Label("Не удалось открыть данные", systemImage: "externaldrive.badge.exclamationmark")
+                        Label(
+                            "Не удалось открыть данные",
+                            systemImage: "externaldrive.badge.exclamationmark"
+                        )
                     } description: {
                         Text(
                             persistence.errorMessage
-                                ?? String(
-                                    localized: "Попробуйте ещё раз.",
-                                    locale: AppLanguage.selectedLocale
+                                ?? AppLocalization.string(
+                                    "Попробуйте ещё раз.",
+                                    locale: appLanguage.locale
                                 )
                         )
                     } actions: {
@@ -40,13 +43,8 @@ struct YetAnotherHabitApp: App {
             }
             .environment(appDataState)
             .environment(appLock)
-            .preferredColorScheme(
-                AppTheme(rawValue: appTheme)?.colorScheme
-            )
-            .environment(
-                \.locale,
-                AppLanguage(rawValue: appLanguage)?.locale ?? AppLanguage.russian.locale
-            )
+            .preferredColorScheme(appTheme.colorScheme)
+            .environment(\.locale, appLanguage.locale)
             .task {
                 await updateLockState()
             }
@@ -74,7 +72,7 @@ struct YetAnotherHabitApp: App {
 
         if faceIDEnabled {
             guard !appLock.isUnlocked else { return }
-            _ = await appLock.authenticate()
+            _ = await appLock.authenticate(locale: appLanguage.locale)
         } else {
             appLock.unlockWithoutAuthentication()
         }

@@ -4,18 +4,14 @@ import SwiftUI
 import UIKit
 
 struct ProfileSettingsView: View {
-    @AppStorage("appTheme") private var appTheme = AppTheme.system.rawValue
-    @AppStorage("appLanguage") private var appLanguage = AppLanguage.russian.rawValue
-    @AppStorage("faceIDEnabled") private var faceIDEnabled = false
     @Environment(\.modelContext) private var modelContext
-    @Environment(AppLockController.self) private var appLock
+    @Environment(\.locale) private var locale
     @Bindable var profile: UserProfile
 
     @State private var draftName: String
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var isPhotoPickerPresented = false
     @State private var isCameraPresented = false
-    @State private var isUpdatingFaceID = false
     @State private var errorMessage: String?
     @State private var avatarTask: Task<Void, Never>?
     @FocusState private var isNameFocused: Bool
@@ -47,34 +43,6 @@ struct ProfileSettingsView: View {
                     .focused($isNameFocused)
                     .onSubmit(saveNameIfNeeded)
             }
-
-            Section("Оформление") {
-                Picker("Тема", selection: $appTheme) {
-                    ForEach(AppTheme.allCases) { theme in
-                        Text(theme.title).tag(theme.rawValue)
-                    }
-                }
-                .pickerStyle(.menu)
-
-                Picker("Язык", selection: $appLanguage) {
-                    ForEach(AppLanguage.allCases) { language in
-                        Text(language.title).tag(language.rawValue)
-                    }
-                }
-                .pickerStyle(.menu)
-            }
-
-            Section("Безопасность") {
-                Toggle("Вход по Face ID", isOn: faceIDBinding)
-                    .disabled(isUpdatingFaceID)
-            }
-
-            Section("О приложении") {
-                Text("Yet Another Habit помогает формировать полезные привычки и отслеживать прогресс.")
-                    .foregroundStyle(.secondary)
-
-                LabeledContent("Версия", value: appVersion)
-            }
         }
         .contentMargins(.top, 12, for: .scrollContent)
         .listSectionSpacing(12)
@@ -102,53 +70,10 @@ struct ProfileSettingsView: View {
             avatarTask?.cancel()
             saveNameIfNeeded()
         }
-        .saveErrorAlert($errorMessage)
-    }
-
-    private var appVersion: String {
-        let version = Bundle.main.object(
-            forInfoDictionaryKey: "CFBundleShortVersionString"
-        ) as? String ?? "—"
-        let build = Bundle.main.object(
-            forInfoDictionaryKey: "CFBundleVersion"
-        ) as? String
-
-        guard let build, !build.isEmpty, build != version else {
-            return version
-        }
-        return "\(version) (\(build))"
-    }
-
-    private var faceIDBinding: Binding<Bool> {
-        Binding(
-            get: { faceIDEnabled },
-            set: { shouldEnable in
-                if shouldEnable {
-                    Task { await enableFaceID() }
-                } else {
-                    faceIDEnabled = false
-                    appLock.unlockWithoutAuthentication()
-                }
-            }
-        )
-    }
-
-    private func enableFaceID() async {
-        isUpdatingFaceID = true
-        defer { isUpdatingFaceID = false }
-
-        guard appLock.verifyFaceIDAvailability() else {
-            faceIDEnabled = false
-            errorMessage = appLock.errorMessage
-            return
-        }
-
-        if await appLock.authenticate() {
-            faceIDEnabled = true
-        } else {
-            faceIDEnabled = false
-            errorMessage = appLock.errorMessage
-        }
+        .navigationTitle("Профиль")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
+        .appErrorAlert("Не удалось обновить профиль", error: $errorMessage)
     }
 
     private var avatarMenu: some View {
@@ -175,7 +100,7 @@ struct ProfileSettingsView: View {
                 }
             }
         } label: {
-            avatar
+            ProfileAvatarView(data: profile.avatarData, size: 96)
                 .overlay(alignment: .bottomTrailing) {
                     Image(systemName: "camera.fill")
                         .font(.caption.weight(.semibold))
@@ -191,26 +116,6 @@ struct ProfileSettingsView: View {
         .accessibilityLabel("Изменить фото профиля")
     }
 
-    @ViewBuilder
-    private var avatar: some View {
-        if
-            let data = profile.avatarData,
-            let image = UIImage(data: data)
-        {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 96, height: 96)
-                .clipShape(Circle())
-        } else {
-            Image(systemName: "person.crop.circle.fill")
-                .resizable()
-                .scaledToFit()
-                .foregroundStyle(.secondary)
-                .frame(width: 96, height: 96)
-        }
-    }
-
     private func loadSelectedPhoto() {
         guard let selectedPhoto else { return }
 
@@ -221,9 +126,9 @@ struct ProfileSettingsView: View {
                     let data = try await selectedPhoto.loadTransferable(type: Data.self),
                     let image = UIImage(data: data)
                 else {
-                    errorMessage = String(
-                        localized: "Не удалось загрузить выбранное фото.",
-                        locale: AppLanguage.selectedLocale
+                    errorMessage = AppLocalization.string(
+                        "Не удалось загрузить выбранное фото.",
+                        locale: locale
                     )
                     return
                 }
@@ -249,12 +154,23 @@ struct ProfileSettingsView: View {
         let targetSize = CGSize(width: 512, height: 512)
         let resizedImage = await image.byPreparingThumbnail(ofSize: targetSize) ?? image
         guard !Task.isCancelled else { return }
-        profile.avatarData = resizedImage.jpegData(compressionQuality: 0.8)
+        guard let avatarData = resizedImage.jpegData(compressionQuality: 0.8) else {
+            errorMessage = AppLocalization.string(
+                "Не удалось обработать фото.",
+                locale: locale
+            )
+            return
+        }
+        profile.avatarData = avatarData
         saveProfile()
     }
 
     private func saveNameIfNeeded() {
-        let name = draftName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedName = draftName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = trimmedName.isEmpty
+            ? UserProfileReconciler.generatedName(locale: locale)
+            : trimmedName
+        draftName = name
         guard name != profile.name else { return }
         profile.name = name
         saveProfile()

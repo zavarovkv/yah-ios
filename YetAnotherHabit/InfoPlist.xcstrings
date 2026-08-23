@@ -1,106 +1,111 @@
 {
-  "sourceLanguage": "ru",
-  "strings": {
-    "CFBundleName": {
-      "comment": "Bundle name",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "new",
-            "value": "YetAnotherHabit"
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YetAnotherHabit"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YetAnotherHabit"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YetAnotherHabit"
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YetAnotherHabit"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YetAnotherHabit"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YetAnotherHabit"
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YetAnotherHabit"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YetAnotherHabit"
           }
         }
       }
     },
-    "NSCameraUsageDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Camera access is used to take a profile photo."
+    "NSCameraUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera access is used to take a profile photo."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Камера используется, чтобы сделать фото профиля."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La cámara se usa para hacer una foto de perfil."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Camera access is used to take a profile photo."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’appareil photo est utilisé pour prendre une photo de profil."
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Camera access is used to take a profile photo."
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A câmera é usada para tirar uma foto de perfil."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Camera access is used to take a profile photo."
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Камера используется, чтобы сделать фото профиля."
           }
         }
       }
     },
-    "NSFaceIDUsageDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Face ID is used to protect access to the app."
+    "NSFaceIDUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID is used to protect access to the app."
           }
         },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Face ID используется для защиты доступа к приложению."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID se usa para proteger el acceso a la app."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Face ID is used to protect access to the app."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID est utilisé pour protéger l’accès à l’app."
           }
         },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Face ID is used to protect access to the app."
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Face ID é usado para proteger o acesso ao app."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Face ID is used to protect access to the app."
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID используется для защиты доступа к приложению."
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

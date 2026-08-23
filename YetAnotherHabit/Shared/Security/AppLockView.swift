@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AppLockView: View {
     @Environment(AppLockController.self) private var appLock
+    @Environment(\.locale) private var locale
 
     var body: some View {
         VStack(spacing: 16) {
@@ -20,7 +21,7 @@ struct AppLockView: View {
             }
 
             Button("Разблокировать") {
-                Task { await appLock.authenticate() }
+                Task { await appLock.authenticate(locale: locale) }
             }
             .buttonStyle(.borderedProminent)
             .disabled(appLock.isAuthenticating)
