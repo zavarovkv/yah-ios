@@ -64,7 +64,7 @@ struct MonthCalendarView: View {
             }
 
             ScrollView(.horizontal) {
-                LazyHStack(alignment: .top, spacing: 0) {
+                HStack(alignment: .top, spacing: 0) {
                     ForEach(-1...1, id: \.self) { offset in
                         monthPage(
                             offset: offset,
