@@ -1,6 +1,12 @@
 import Foundation
 import Observation
 
+struct HabitPresentationData {
+    let habits: [Habit]
+    let completionCounts: [String: Int]
+    let completedIdentifiers: Set<String>
+}
+
 /// A short-lived UI cache that bridges the interval between a successful
 /// SwiftData save and the corresponding `@Query` update.
 @MainActor
@@ -35,6 +41,10 @@ final class AppDataState {
     }
 
     func visibleHabits(from persistedHabits: [Habit]) -> [Habit] {
+        guard !addedHabits.isEmpty || !deletedHabitIdentifiers.isEmpty else {
+            return persistedHabits
+        }
+
         let persistedIdentifiers = Set(persistedHabits.map(\.identifier))
         let pending = addedHabits.values.filter {
             !persistedIdentifiers.contains($0.identifier)
@@ -48,12 +58,34 @@ final class AppDataState {
     func visibleCompletionCounts(
         from persistedCounts: [String: Int]
     ) -> [String: Int] {
-        completionCountOverrides.reduce(into: persistedCounts) { result, override in
+        guard !completionCountOverrides.isEmpty else {
+            return persistedCounts
+        }
+
+        return completionCountOverrides.reduce(into: persistedCounts) { result, override in
             if override.value > 0 {
                 result[override.key] = override.value
             } else {
                 result.removeValue(forKey: override.key)
             }
         }
+    }
+
+    func presentationData(
+        persistedHabits: [Habit],
+        persistedCompletionCounts: [String: Int]
+    ) -> HabitPresentationData {
+        let habits = visibleHabits(from: persistedHabits)
+        let completionCounts = visibleCompletionCounts(
+            from: persistedCompletionCounts
+        )
+        return HabitPresentationData(
+            habits: habits,
+            completionCounts: completionCounts,
+            completedIdentifiers: HabitCompletionIndex.identifiers(
+                in: completionCounts,
+                habits: habits
+            )
+        )
     }
 }

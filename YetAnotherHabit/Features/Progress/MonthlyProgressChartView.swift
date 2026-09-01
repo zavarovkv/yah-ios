@@ -1,4 +1,3 @@
-import SwiftData
 import SwiftUI
 
 struct MonthlyProgressChartView: View {
@@ -20,10 +19,8 @@ struct MonthlyProgressChartView: View {
 
     @Environment(\.calendar) private var calendar
     @Environment(\.locale) private var locale
-    @Environment(AppDataState.self) private var appDataState
-    @Query private var habits: [Habit]
-    @Query(filter: #Predicate<HabitCompletion> { $0.isCompleted })
-    private var completions: [HabitCompletion]
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    let data: HabitPresentationData
     @State private var period: Period = .month
 
     var body: some View {
@@ -56,7 +53,10 @@ struct MonthlyProgressChartView: View {
                     .contentTransition(.numericText())
             }
             .frame(width: 150, height: 150)
-            .animation(.easeInOut(duration: 0.25), value: progress)
+            .animation(
+                accessibilityReduceMotion ? nil : .easeInOut(duration: 0.25),
+                value: progress
+            )
 
             Text(periodTitle)
                 .font(.body)
@@ -118,18 +118,10 @@ struct MonthlyProgressChartView: View {
     }
 
     private var snapshot: HabitProgressCalculator.Snapshot {
-        let visibleHabits = appDataState.visibleHabits(from: habits)
-        let visibleCounts = appDataState.visibleCompletionCounts(
-            from: HabitCompletionIndex.counts(in: completions)
-        )
-
         return HabitProgressCalculator.snapshot(
             for: snapshotDates,
-            habits: visibleHabits,
-            completedIdentifiers: HabitCompletionIndex.identifiers(
-                in: visibleCounts,
-                habits: visibleHabits
-            ),
+            habits: data.habits,
+            completedIdentifiers: data.completedIdentifiers,
             calendar: calendar
         )
     }

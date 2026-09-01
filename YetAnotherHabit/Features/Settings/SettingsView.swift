@@ -9,7 +9,7 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.locale) private var locale
     @Environment(AppLockController.self) private var appLock
-    @Query(sort: \UserProfile.updatedAt, order: .reverse) private var profiles: [UserProfile]
+    let profiles: [UserProfile]
     @State private var createdProfile: UserProfile?
     @State private var profileCreationError: String?
     @State private var isPresentingProfile = false

@@ -3,16 +3,26 @@ import SwiftUI
 struct WeekCalendarView: View {
     @Environment(\.calendar) private var calendar
     @Environment(\.locale) private var locale
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
 
     let weekStart: Date
     @Binding var selectedDate: Date
     let progressByDayKey: [String: Double]
+    let onNavigationInteractionChanged: (Bool) -> Void
 
     var body: some View {
         HStack(spacing: 8) {
             ForEach(WeekCalendar.dates(starting: weekStart, calendar: calendar), id: \.self) { date in
                 Button {
-                    selectedDate = date
+                    guard !isSelected(date) else { return }
+
+                    onNavigationInteractionChanged(true)
+                    withAnimation(
+                        accessibilityReduceMotion ? nil : .smooth(duration: 0.2)
+                    ) {
+                        selectedDate = date
+                    }
+                    onNavigationInteractionChanged(false)
                 } label: {
                     VStack(spacing: 8) {
                         Text(

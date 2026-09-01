@@ -24,15 +24,49 @@ enum AppSchemaV3: VersionedSchema {
     }
 }
 
+enum AppSchemaV4: VersionedSchema {
+    static let versionIdentifier = Schema.Version(4, 0, 0)
+
+    static var models: [any PersistentModel.Type] {
+        [AppSchemaV4.Habit.self, AppSchemaV4.HabitCompletion.self, AppSchemaV2.UserProfile.self]
+    }
+}
+
+enum AppSchemaV5: VersionedSchema {
+    static let versionIdentifier = Schema.Version(5, 0, 0)
+
+    static var models: [any PersistentModel.Type] {
+        [AppSchemaV5.Habit.self, AppSchemaV5.HabitCompletion.self, AppSchemaV2.UserProfile.self]
+    }
+}
+
+enum AppSchemaV6: VersionedSchema {
+    static let versionIdentifier = Schema.Version(6, 0, 0)
+
+    static var models: [any PersistentModel.Type] {
+        [AppSchemaV6.Habit.self, AppSchemaV6.HabitCompletion.self, AppSchemaV2.UserProfile.self]
+    }
+}
+
 enum AppMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
-        [AppSchemaV1.self, AppSchemaV2.self, AppSchemaV3.self]
+        [
+            AppSchemaV1.self,
+            AppSchemaV2.self,
+            AppSchemaV3.self,
+            AppSchemaV4.self,
+            AppSchemaV5.self,
+            AppSchemaV6.self
+        ]
     }
 
     static var stages: [MigrationStage] {
         [
             .lightweight(fromVersion: AppSchemaV1.self, toVersion: AppSchemaV2.self),
-            .lightweight(fromVersion: AppSchemaV2.self, toVersion: AppSchemaV3.self)
+            .lightweight(fromVersion: AppSchemaV2.self, toVersion: AppSchemaV3.self),
+            .lightweight(fromVersion: AppSchemaV3.self, toVersion: AppSchemaV4.self),
+            .lightweight(fromVersion: AppSchemaV4.self, toVersion: AppSchemaV5.self),
+            .lightweight(fromVersion: AppSchemaV5.self, toVersion: AppSchemaV6.self)
         ]
     }
 }

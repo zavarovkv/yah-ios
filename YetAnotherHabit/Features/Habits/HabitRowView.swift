@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct HabitRowView: View {
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+
     let habit: Habit
     let count: Int
     let streak: Int
@@ -36,9 +38,9 @@ struct HabitRowView: View {
                 Stepper(
                     value: Binding(
                         get: { count },
-                        set: onCountChanged
+                        set: { onCountChanged($0) }
                     ),
-                    in: 0...HabitCompletionStore.maximumDailyCount
+                    in: 0...HabitCompletionStore.maximumCount
                 ) {
                     EmptyView()
                 }
@@ -51,8 +53,13 @@ struct HabitRowView: View {
         }
         .habitCardStyle(habit: habit, isCompleted: isCompleted)
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .animation(.easeInOut(duration: 0.2), value: isCompleted)
-        .animation(.easeInOut(duration: 0.2), value: count)
+        .animation(
+            accessibilityReduceMotion ? nil : .easeInOut(duration: 0.22),
+            value: isCompleted
+        )
+        .sensoryFeedback(.impact(weight: .light), trigger: isCompleted) { oldValue, newValue in
+            habit.kind == .habit && !oldValue && newValue
+        }
     }
 
     @ViewBuilder

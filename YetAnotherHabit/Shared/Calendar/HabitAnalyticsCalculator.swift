@@ -42,6 +42,16 @@ enum HabitAnalyticsCalculator {
             )
         }
 
+        if habit.kind == .counter, habit.effectiveCounterInterval != .daily {
+            return intervalSnapshot(
+                for: habit,
+                completedIdentifiers: completedIdentifiers,
+                through: endDate,
+                recentDayCount: recentDayCount,
+                calendar: calendar
+            )
+        }
+
         let recentStart = calendar.date(
             byAdding: .day,
             value: -(max(recentDayCount, 1) - 1),
@@ -58,9 +68,10 @@ enum HabitAnalyticsCalculator {
         while date <= endDate {
             if habit.isScheduled(on: date, calendar: calendar) {
                 let isCompleted = completedIdentifiers.contains(
-                    HabitCompletion.identifier(
-                        habitID: habit.identifier,
-                        dayKey: WeekCalendar.dayKey(for: date, calendar: calendar)
+                    HabitCompletionPeriod.identifier(
+                        for: habit,
+                        containing: date,
+                        calendar: calendar
                     )
                 )
 
@@ -100,6 +111,96 @@ enum HabitAnalyticsCalculator {
         )
     }
 
+    private static func intervalSnapshot(
+        for habit: Habit,
+        completedIdentifiers: Set<String>,
+        through endDate: Date,
+        recentDayCount: Int,
+        calendar: Calendar
+    ) -> Snapshot {
+        let recentStart = calendar.date(
+            byAdding: .day,
+            value: -(max(recentDayCount, 1) - 1),
+            to: endDate
+        ) ?? endDate
+        let lastPeriodStart = HabitCompletionPeriod.start(
+            for: habit,
+            containing: endDate,
+            calendar: calendar
+        )
+        var periodStart = HabitCompletionPeriod.start(
+            for: habit,
+            containing: habit.createdAt,
+            calendar: calendar
+        )
+        var bestStreak = 0
+        var runningStreak = 0
+        var completedCount = 0
+        var recentCompletedCount = 0
+        var recentScheduledCount = 0
+
+        while periodStart <= lastPeriodStart {
+            let hasScheduledOccurrence = HabitCompletionPeriod.hasScheduledOccurrence(
+                for: habit,
+                periodStartingAt: periodStart,
+                through: endDate,
+                calendar: calendar
+            )
+
+            if hasScheduledOccurrence {
+                let identifier = HabitCompletionPeriod.identifier(
+                    for: habit,
+                    containing: periodStart,
+                    calendar: calendar
+                )
+                let isCompleted = completedIdentifiers.contains(identifier)
+
+                if isCompleted {
+                    completedCount += 1
+                    runningStreak += 1
+                    bestStreak = max(bestStreak, runningStreak)
+                } else {
+                    runningStreak = 0
+                }
+
+                if HabitCompletionPeriod.hasScheduledOccurrence(
+                    for: habit,
+                    periodStartingAt: periodStart,
+                    notBefore: recentStart,
+                    through: endDate,
+                    calendar: calendar
+                ) {
+                    recentScheduledCount += 1
+                    if isCompleted {
+                        recentCompletedCount += 1
+                    }
+                }
+            }
+
+            guard let nextStart = HabitCompletionPeriod.nextStart(
+                after: periodStart,
+                for: habit,
+                calendar: calendar
+            ) else {
+                break
+            }
+            periodStart = nextStart
+        }
+
+        return Snapshot(
+            currentStreak: HabitStreakCalculator.streak(
+                for: habit,
+                through: endDate,
+                completedIdentifiers: completedIdentifiers,
+                calendar: calendar
+            ),
+            bestStreak: bestStreak,
+            completedCount: completedCount,
+            recentCompletedCount: recentCompletedCount,
+            recentScheduledCount: recentScheduledCount
+        )
+    }
+
     static func status(
         for date: Date,
         habit: Habit,
@@ -119,13 +220,24 @@ enum HabitAnalyticsCalculator {
             return .upcoming
         }
 
-        let identifier = HabitCompletion.identifier(
-            habitID: habit.identifier,
-            dayKey: WeekCalendar.dayKey(for: date, calendar: calendar)
+        let identifier = HabitCompletionPeriod.identifier(
+            for: habit,
+            containing: date,
+            calendar: calendar
         )
         if completedIdentifiers.contains(identifier) {
             return .completed
         }
-        return date == today ? .pending : .missed
+
+        let isCurrentPeriod = HabitCompletionPeriod.start(
+            for: habit,
+            containing: date,
+            calendar: calendar
+        ) == HabitCompletionPeriod.start(
+            for: habit,
+            containing: today,
+            calendar: calendar
+        )
+        return date == today || isCurrentPeriod ? .pending : .missed
     }
 }

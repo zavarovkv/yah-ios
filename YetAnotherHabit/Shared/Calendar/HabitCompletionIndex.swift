@@ -6,7 +6,7 @@ enum HabitCompletionIndex {
         for habitIdentifier: UUID? = nil
     ) -> [String: Int] {
         completions.reduce(into: [:]) { result, completion in
-            guard completion.isCompleted, completion.count > 0 else { return }
+            guard completion.count > 0 else { return }
             if let habitIdentifier,
                completion.habit?.identifier != habitIdentifier
             {
@@ -24,12 +24,27 @@ enum HabitCompletionIndex {
         in counts: [String: Int],
         habits: [Habit]
     ) -> Set<String> {
-        habits.reduce(into: []) { result, habit in
-            let prefix = "\(habit.identifier.uuidString)|"
-            for (identifier, count) in counts
-            where identifier.hasPrefix(prefix) && habit.isGoalMet(by: count) {
-                result.insert(identifier)
+        let habitsByIdentifier = habits.reduce(into: [String: Habit]()) { result, habit in
+            result[habit.identifier.uuidString] = habit
+        }
+
+        return counts.reduce(into: []) { result, entry in
+            guard
+                let separatorIndex = entry.key.firstIndex(of: "|"),
+                let habit = habitsByIdentifier[String(entry.key[..<separatorIndex])],
+                habit.isGoalMet(by: entry.value)
+            else {
+                return
             }
+
+            result.insert(entry.key)
+        }
+    }
+
+    static func totalCount(in counts: [String: Int]) -> Int {
+        counts.values.reduce(0) { result, count in
+            let (sum, overflow) = result.addingReportingOverflow(max(0, count))
+            return overflow ? Int.max : sum
         }
     }
 }

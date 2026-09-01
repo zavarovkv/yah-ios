@@ -7,22 +7,26 @@ struct ProgressScreen: View {
         var id: Date { date }
     }
 
+    @Environment(\.calendar) private var calendar
     @State private var selectedDate: Date?
     @State private var presentedDay: PresentedDay?
     @State private var calendarResetID = 0
+    let data: HabitPresentationData
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 0) {
-                    MonthlyProgressChartView()
+                    MonthlyProgressChartView(data: data)
 
                     Divider()
                         .padding(.horizontal)
 
                     MonthCalendarView(
+                        data: data,
                         selectedDate: $selectedDate,
                         resetID: calendarResetID,
+                        initialCalendar: calendar,
                         onDateSelected: presentDayProgress
                     )
                     .padding(.top, 12)
@@ -41,7 +45,7 @@ struct ProgressScreen: View {
                 }
             }
             .sheet(item: $presentedDay, onDismiss: clearSelection) { selection in
-                DayProgressView(date: selection.date)
+                DayProgressView(data: data, date: selection.date)
                     .presentationDetents([.medium, .large])
                     .presentationDragIndicator(.visible)
                     .presentationBackground(Color(uiColor: .systemBackground))

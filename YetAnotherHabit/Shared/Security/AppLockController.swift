@@ -3,14 +3,63 @@ import LocalAuthentication
 import Observation
 
 @MainActor
+protocol AppAuthenticationContext: AnyObject {
+    var biometryType: LABiometryType { get }
+    var localizedCancelTitle: String? { get set }
+
+    func canEvaluatePolicy(_ policy: LAPolicy) -> Bool
+    func evaluatePolicy(_ policy: LAPolicy, localizedReason: String) async throws -> Bool
+    func invalidate()
+}
+
+@MainActor
+private final class LocalAuthenticationContext: AppAuthenticationContext {
+    private let context = LAContext()
+
+    var biometryType: LABiometryType {
+        context.biometryType
+    }
+
+    var localizedCancelTitle: String? {
+        get { context.localizedCancelTitle }
+        set { context.localizedCancelTitle = newValue }
+    }
+
+    func canEvaluatePolicy(_ policy: LAPolicy) -> Bool {
+        var error: NSError?
+        return context.canEvaluatePolicy(policy, error: &error)
+    }
+
+    func evaluatePolicy(
+        _ policy: LAPolicy,
+        localizedReason: String
+    ) async throws -> Bool {
+        try await context.evaluatePolicy(policy, localizedReason: localizedReason)
+    }
+
+    func invalidate() {
+        context.invalidate()
+    }
+}
+
+@MainActor
 @Observable
 final class AppLockController {
     private(set) var isUnlocked = false
     private(set) var isAuthenticating = false
     private(set) var errorMessage: String?
     @ObservationIgnored private var authenticationTask: Task<Bool, Never>?
-    @ObservationIgnored private var authenticationContext: LAContext?
+    @ObservationIgnored private var authenticationContext: (any AppAuthenticationContext)?
     @ObservationIgnored private var authenticationAttemptID: UUID?
+    @ObservationIgnored private let makeAuthenticationContext: @MainActor () -> any AppAuthenticationContext
+
+    init(
+        makeAuthenticationContext: @MainActor @escaping () -> any AppAuthenticationContext = {
+            LocalAuthenticationContext()
+        }
+    ) {
+        self.makeAuthenticationContext = makeAuthenticationContext
+    }
 
     func lock() {
         authenticationContext?.invalidate()
@@ -50,10 +99,9 @@ final class AppLockController {
     }
 
     func verifyFaceIDAvailability(locale: Locale) -> Bool {
-        let context = LAContext()
-        var error: NSError?
+        let context = makeAuthenticationContext()
 
-        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error),
+        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics),
               context.biometryType == .faceID
         else {
             errorMessage = AppLocalization.string(
@@ -69,7 +117,7 @@ final class AppLockController {
     }
 
     private func performAuthentication(locale: Locale, attemptID: UUID) async -> Bool {
-        let context = LAContext()
+        let context = makeAuthenticationContext()
         authenticationContext = context
         defer {
             if authenticationContext === context {
@@ -77,9 +125,8 @@ final class AppLockController {
             }
         }
         context.localizedCancelTitle = AppLocalization.string("Отмена", locale: locale)
-        var error: NSError?
 
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication) else {
             errorMessage = AppLocalization.string(
                 "Не удалось выполнить проверку владельца устройства.",
                 locale: locale

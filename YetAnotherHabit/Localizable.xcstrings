@@ -1,6 +1,121 @@
 {
   "sourceLanguage" : "ru",
   "strings" : {
+    "Время" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Hora" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Heure" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Horário" } }
+      }
+    },
+    "Каждые две недели" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Every two weeks" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cada dos semanas" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Toutes les deux semaines" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A cada duas semanas" } }
+      }
+    },
+    "Напоминание" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reminder" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Recordatorio" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rappel" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Lembrete" } }
+      }
+    },
+    "Напоминать" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remind me" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Recordarme" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Me le rappeler" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Lembrar-me" } }
+      }
+    },
+    "Пора заняться привычкой." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time for your habit." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Es hora de tu hábito." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "C’est l’heure de votre habitude." } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Hora de cuidar do seu hábito." } }
+      }
+    },
+    "Разрешите уведомления в настройках системы или отключите напоминание." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable notifications in system settings or turn off the reminder." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Activa las notificaciones en los ajustes del sistema o desactiva el recordatorio." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Autorisez les notifications dans les réglages système ou désactivez le rappel." } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Ative as notificações nos ajustes do sistema ou desative o lembrete." } }
+      }
+    },
+    "Уведомление придёт в выбранные дни недели." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "You’ll be notified on the selected weekdays." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Recibirás una notificación los días seleccionados." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vous serez averti les jours sélectionnés." } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Você receberá uma notificação nos dias selecionados." } }
+      }
+    },
+    "%lld за две недели" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld over two weeks"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld en dos semanas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld sur deux semaines"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld em duas semanas"
+          }
+        }
+      }
+    },
+    "%lld из %lld за две недели" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld over two weeks"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld en dos semanas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld sur %2$lld en deux semaines"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld em duas semanas"
+          }
+        }
+      }
+    },
+    ", " : {
+
+    },
     "%lld %%" : {
       "localizations" : {
         "en" : {
@@ -29,30 +144,254 @@
         }
       }
     },
-    "%lld из %lld" : {
+    "%lld в этом году" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld of %2$lld"
+            "value" : "%lld this year"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld de %2$lld"
+            "value" : "%lld este año"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld sur %2$lld"
+            "value" : "%lld cette année"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld de %2$lld"
+            "value" : "%lld neste ano"
+          }
+        }
+      }
+    },
+    "%lld в этом месяце" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld this month"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld este mes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld ce mois-ci"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld neste mês"
+          }
+        }
+      }
+    },
+    "%lld из %lld · Отличная работа!" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld · Great job!"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld · ¡Buen trabajo!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld sur %2$lld · Excellent travail !"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld · Ótimo trabalho!"
+          }
+        }
+      }
+    },
+    "%lld из %lld в этом году" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld this year"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld este año"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld sur %2$lld cette année"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld neste ano"
+          }
+        }
+      }
+    },
+    "%lld из %lld в этом месяце" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld this month"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld este mes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld sur %2$lld ce mois-ci"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld neste mês"
+          }
+        }
+      }
+    },
+    "%lld из %lld на этой неделе" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld this week"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld esta semana"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld sur %2$lld cette semaine"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld nesta semana"
+          }
+        }
+      }
+    },
+    "%lld из %lld сегодня" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld today"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld hoy"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld sur %2$lld aujourd’hui"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld hoje"
+          }
+        }
+      }
+    },
+    "%lld на этой неделе" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld this week"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld esta semana"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld cette semaine"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld nesta semana"
+          }
+        }
+      }
+    },
+    "%lld сегодня" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld today"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld hoy"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld aujourd’hui"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld hoje"
           }
         }
       }
@@ -590,6 +929,7 @@
       }
     },
     "Выбрать иконку" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1009,6 +1349,147 @@
         }
       }
     },
+    "Ежегодно" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yearly"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anualmente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque année"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anualmente"
+          }
+        }
+      }
+    },
+    "Ежедневно" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diariamente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les jours"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diariamente"
+          }
+        }
+      }
+    },
+    "Ежемесячно" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monthly"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensualmente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque mois"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensalmente"
+          }
+        }
+      }
+    },
+    "Еженедельно" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weekly"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Semanalmente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque semaine"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Semanalmente"
+          }
+        }
+      }
+    },
+    "Ещё" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plus"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mais"
+          }
+        }
+      }
+    },
     "Жёлтый" : {
       "localizations" : {
         "en" : {
@@ -1149,6 +1630,34 @@
         }
       }
     },
+    "Значение" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Value"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valeur"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valor"
+          }
+        }
+      }
+    },
     "Золотой" : {
       "localizations" : {
         "en" : {
@@ -1173,6 +1682,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dourado"
+          }
+        }
+      }
+    },
+    "Изменить правила привычки?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change habit rules?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Cambiar las reglas de la rutina?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier les règles de l’habitude ?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterar as regras do hábito?"
           }
         }
       }
@@ -1229,6 +1766,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ícone"
+          }
+        }
+      }
+    },
+    "Иконка %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icon %lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icono %lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icône %lld"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ícone %lld"
           }
         }
       }
@@ -1313,6 +1878,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Índigo"
+          }
+        }
+      }
+    },
+    "Интервал" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interval"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intervalo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intervalle"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intervalo"
           }
         }
       }
@@ -2438,6 +3031,7 @@
       }
     },
     "Отличная работа!" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2970,6 +3564,7 @@
       }
     },
     "Развернуть" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3021,6 +3616,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Programação"
+          }
+        }
+      }
+    },
+    "Расписание, цель или интервал применятся ко всей истории и могут изменить аналитику." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The schedule, goal, or interval will apply to the entire history and may change analytics."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El horario, la meta o el intervalo se aplicarán a todo el historial y pueden cambiar las estadísticas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le programme, l’objectif ou l’intervalle s’appliquera à tout l’historique et pourra modifier les statistiques."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A programação, a meta ou o intervalo serão aplicados a todo o histórico e podem alterar as análises."
           }
         }
       }
@@ -3166,6 +3789,7 @@
       }
     },
     "Свернуть" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3217,6 +3841,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Claro"
+          }
+        }
+      }
+    },
+    "Свойства" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Properties"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Propiedades"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Propriétés"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Propriedades"
           }
         }
       }
@@ -3585,6 +4237,34 @@
         }
       }
     },
+    "Сохранить изменения" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Changes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar cambios"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer les modifications"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvar alterações"
+          }
+        }
+      }
+    },
     "Счётчик" : {
       "localizations" : {
         "en" : {
@@ -3921,6 +4601,34 @@
         }
       }
     },
+    "Установить цель" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set Goal"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establecer objetivo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Définir un objectif"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Definir meta"
+          }
+        }
+      }
+    },
     "Фиолетовый" : {
       "localizations" : {
         "en" : {
@@ -3977,7 +4685,36 @@
         }
       }
     },
+    "Цель" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Goal"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objetivo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objectif"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meta"
+          }
+        }
+      }
+    },
     "Цель (необязательно)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4005,30 +4742,30 @@
         }
       }
     },
-    "Цель отмечает день выполненным, но не ограничивает значение счётчика." : {
+    "Цель отмечает интервал выполненным, но не ограничивает значение счётчика." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The goal marks the day as complete but does not limit the counter value."
+            "value" : "The goal marks the interval as complete but does not limit the counter value."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El objetivo marca el día como completado, pero no limita el valor del contador."
+            "value" : "El objetivo marca el intervalo como completado, pero no limita el valor del contador."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "L’objectif marque la journée comme terminée sans limiter la valeur du compteur."
+            "value" : "L’objectif marque l’intervalle comme terminé sans limiter la valeur du compteur."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A meta marca o dia como concluído, mas não limita o valor do contador."
+            "value" : "A meta marca o intervalo como concluído, mas não limita o valor do contador."
           }
         }
       }

@@ -21,15 +21,18 @@ enum HabitProgressCalculator {
         var completedCount = 0
 
         for date in dates {
-            let dayKey = WeekCalendar.dayKey(for: date, calendar: calendar)
             for habit in habits
-            where habit.contributesToDailyGoal
-                && habit.isScheduled(on: date, calendar: calendar)
+            where HabitCompletionPeriod.isGoalDue(
+                for: habit,
+                on: date,
+                calendar: calendar
+            )
             {
                 scheduledCount += 1
-                let identifier = HabitCompletion.identifier(
-                    habitID: habit.identifier,
-                    dayKey: dayKey
+                let identifier = HabitCompletionPeriod.identifier(
+                    for: habit,
+                    containing: date,
+                    calendar: calendar
                 )
                 if completedIdentifiers.contains(identifier) {
                     completedCount += 1

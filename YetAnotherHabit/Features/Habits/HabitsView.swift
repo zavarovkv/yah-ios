@@ -1,4 +1,3 @@
-import SwiftData
 import SwiftUI
 
 private enum HabitRoute: Hashable {
@@ -6,18 +5,14 @@ private enum HabitRoute: Hashable {
     case edit(UUID)
 }
 
-private enum HabitsPullAction {
-    case returnToToday
-    case setSectionExpanded(HabitSectionExpansionPolicy.Section, Bool)
-}
-
 struct HabitsView: View {
     @Environment(\.calendar) private var calendar
     @Environment(\.locale) private var locale
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @Environment(AppDataState.self) private var appDataState
-    @Query(sort: \Habit.createdAt, animation: .default) private var habits: [Habit]
-    @Query(filter: #Predicate<HabitCompletion> { $0.isCompleted })
-    private var completions: [HabitCompletion]
+    let data: HabitPresentationData
+    let onTabBarScrollDirectionChanged: (Bool) -> Void
+    let onTabBarScrollInteractionEnded: () -> Void
     @AppStorage(AppPreferenceKey.completedHabitsSectionExpanded)
     private var prefersCompletedSectionExpanded = true
     @AppStorage(AppPreferenceKey.countersSectionExpanded)
@@ -28,47 +23,63 @@ struct HabitsView: View {
     @State private var isCreatingHabit = false
     @State private var persistenceError: String?
     @State private var returnTransitionEdge: Edge = .trailing
-    @State private var calendarTransitionID = 0
     @State private var dayTransitionID = 0
-    @State private var navigationPath: [HabitRoute] = []
+    @State private var calendarTransitionID = 0
+    @State private var presentedRoute: HabitRoute?
+    @State private var nestedEditHabitIdentifier: UUID?
     @State private var isDayContentAtTop = true
-    @State private var returnPullDistance: CGFloat = 0
-    @State private var isReturnPullReady = false
-    @State private var returnFeedbackTrigger = 0
+    @State private var calendarScrollOffset: CGFloat = 0
+    @State private var pullInteractionState = HabitsPullInteractionState()
     @State private var hasInitializedCalendar = false
+    @State private var isDayNavigationActive = false
+    @State private var showsDayScrollIndicator = true
+    @State private var scrollIndicatorRestoreID = 0
 
-    private let returnPullThreshold: CGFloat = 68
+    private let emptyReturnPullThreshold: CGFloat = 84
+    private let listReturnPullThreshold: CGFloat = 60
+    private let pullIndicatorRevealDistance: CGFloat = 32
+    private let pullIndicatorContentHeight: CGFloat = 24
+    private let calendarHeaderHeight: CGFloat = 96
+    private let calendarExitFadeDistance: CGFloat = 52
+    private let maximumPullIndicatorHeight: CGFloat = 72
 
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            VStack(spacing: 0) {
-                ZStack {
-                    WeekCalendarPagerView(
-                        displayedWeekStart: $displayedWeekStart,
-                        selectedDate: $selectedDate,
-                        progressByDayKey: progressByDayKey
-                    )
-                    .id(calendarTransitionID)
-                    .transition(.push(from: returnTransitionEdge))
+        NavigationStack {
+            ZStack(alignment: .top) {
+                ZStack(alignment: .top) {
+                    dayContent
+                        .offset(y: scheduledHabits.isEmpty ? pullIndicatorHeight : 0)
+                        .id(dayTransitionID)
+                        .transition(.push(from: returnTransitionEdge))
+
+                    calendarContent
+                        .frame(height: calendarHeaderHeight, alignment: .top)
+                        .offset(y: -calendarScrollOffset)
+                        .opacity(calendarExitOpacity)
+                        .id(calendarTransitionID)
+                        .transition(.push(from: returnTransitionEdge))
                 }
-                .frame(height: 72)
-                .padding(.top, 12)
-                .clipped()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                pullActionIndicator
-
-                dayContent
-                    .id(dayTransitionID)
-                    .transition(.push(from: returnTransitionEdge))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped()
+                HabitsPullIndicator(
+                    state: pullInteractionState,
+                    action: pullAction,
+                    returnToTodaySystemImage: returnToTodaySystemImage,
+                    threshold: returnPullThreshold,
+                    revealDistance: pullIndicatorRevealDistance,
+                    contentHeight: pullIndicatorContentHeight,
+                    maximumHeight: maximumPullIndicatorHeight,
+                    isEmptyState: scheduledHabits.isEmpty
+                )
+                    .offset(y: calendarHeaderHeight)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(uiColor: .systemBackground))
             .contentShape(Rectangle())
             .simultaneousGesture(pullActionGesture)
-            .sensoryFeedback(.selection, trigger: returnFeedbackTrigger)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.visible, for: .navigationBar)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Button(action: returnToToday) {
@@ -99,50 +110,50 @@ struct HabitsView: View {
                     appDataState.recordAdded(habit)
                 }
             }
-            .navigationDestination(for: HabitRoute.self, destination: habitDestination)
-            .onChange(of: habits.map(\.identifier)) {
-                reconcileAppDataState()
-            }
-            .onChange(of: completions.map(\.identifier)) {
-                reconcileAppDataState()
-            }
-            .onChange(of: completions.map(\.count)) {
-                reconcileAppDataState()
-            }
+            .navigationDestination(item: $presentedRoute, destination: habitDestination)
             .onAppear(perform: initializeCalendar)
+            .task(id: scrollIndicatorRestoreID, restoreDayScrollIndicator)
             .saveErrorAlert($persistenceError)
         }
+        .modifier(HabitsTabBarBackground())
     }
 
     @ViewBuilder
     private var dayContent: some View {
         if scheduledHabits.isEmpty {
-            ZStack {
+            VStack(spacing: 0) {
                 Color.clear
+                    .frame(height: calendarHeaderHeight)
 
-                ContentUnavailableView {
-                    Image(systemName: "checkmark.circle")
-                        .font(.system(size: 44, weight: .regular))
-                        .symbolRenderingMode(.monochrome)
-                        .foregroundStyle(emptyStateForegroundColor)
-                        .accessibilityHidden(true)
-                } description: {
-                    Text(emptyStateMessage)
-                        .font(.body)
-                        .foregroundStyle(emptyStateForegroundColor)
-                        .multilineTextAlignment(.center)
-                } actions: {
-                    Button("Добавить", systemImage: "plus") {
-                        isCreatingHabit = true
+                ZStack {
+                    Color.clear
+
+                    ContentUnavailableView {
+                        Image(systemName: "checkmark.circle")
+                            .font(.system(size: 44, weight: .regular))
+                            .symbolRenderingMode(.monochrome)
+                            .foregroundStyle(emptyStateForegroundColor)
+                            .accessibilityHidden(true)
+                    } description: {
+                        Text(emptyStateMessage)
+                            .font(.body)
+                            .foregroundStyle(emptyStateForegroundColor)
+                            .multilineTextAlignment(.center)
+                    } actions: {
+                        Button("Добавить", systemImage: "plus") {
+                            isCreatingHabit = true
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
+                        .buttonBorderShape(.capsule)
+                        .tint(.accentColor)
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-                    .buttonBorderShape(.capsule)
-                    .tint(.accentColor)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .onAppear {
                 isDayContentAtTop = true
+                calendarScrollOffset = 0
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
@@ -153,16 +164,54 @@ struct HabitsView: View {
                 completionCounts: completionCounts,
                 completedIdentifiers: completedIdentifiers,
                 onCountChanged: recordCountChange,
-                onOpenHabit: { navigationPath.append(.analytics($0)) },
-                onEditHabit: { navigationPath.append(.edit($0)) },
+                onOpenHabit: { presentedRoute = .analytics($0) },
+                onEditHabit: { presentedRoute = .edit($0) },
                 onScrollTopChanged: { isDayContentAtTop = $0 },
+                onScrollOffsetChanged: { offset in
+                    guard calendarScrollOffset != offset else { return }
+                    calendarScrollOffset = offset
+                },
+                onTabBarScrollDirectionChanged: onTabBarScrollDirectionChanged,
+                onTabBarScrollInteractionEnded: onTabBarScrollInteractionEnded,
+                onPullChanged: handleListPullChanged,
+                onPullEnded: handleListPullEnded,
+                onPullRebounded: handleListPullRebounded,
+                topInset: calendarHeaderHeight,
+                pullReboundCompletionDistance: canReturnToToday ? 12 : 0.5,
+                showsScrollIndicator: showsDayScrollIndicator,
                 prefersCompletedSectionExpanded: $prefersCompletedSectionExpanded,
                 prefersCountersSectionExpanded: $prefersCountersSectionExpanded,
                 persistenceError: $persistenceError
             )
-            .padding(.top, 16)
             .id(WeekCalendar.dayKey(for: selectedDate, calendar: calendar))
         }
+    }
+
+    private var calendarContent: some View {
+        WeekCalendarPagerView(
+            displayedWeekStart: $displayedWeekStart,
+            selectedDate: $selectedDate,
+            progressByDayKey: progressByDayKey,
+            onNavigationInteractionChanged: handleDayNavigationInteractionChanged
+        )
+        .padding(.top, 12)
+        .padding(.bottom, 12)
+    }
+
+    private var calendarExitOpacity: Double {
+        let fadeStart = max(
+            calendarHeaderHeight - calendarExitFadeDistance,
+            0
+        )
+        let linearProgress = min(
+            max(
+                (calendarScrollOffset - fadeStart) / calendarExitFadeDistance,
+                0
+            ),
+            1
+        )
+        let smoothProgress = linearProgress * linearProgress * (3 - 2 * linearProgress)
+        return Double(1 - smoothProgress)
     }
 
     private var emptyStateMessage: LocalizedStringKey {
@@ -181,7 +230,10 @@ struct HabitsView: View {
         case .analytics(let identifier):
             if let habit = habit(with: identifier) {
                 HabitAnalyticsView(habit: habit) {
-                    navigationPath.append(.edit(identifier))
+                    nestedEditHabitIdentifier = identifier
+                }
+                .navigationDestination(item: $nestedEditHabitIdentifier) {
+                    editDestination(identifier: $0)
                 }
             } else {
                 missingHabitView
@@ -192,6 +244,15 @@ struct HabitsView: View {
             } else {
                 missingHabitView
             }
+        }
+    }
+
+    @ViewBuilder
+    private func editDestination(identifier: UUID) -> some View {
+        if let habit = habit(with: identifier) {
+            EditHabitView(habit: habit, onDeleted: handleHabitDeleted)
+        } else {
+            missingHabitView
         }
     }
 
@@ -208,22 +269,18 @@ struct HabitsView: View {
 
     private func handleHabitDeleted(_ identifier: UUID) {
         appDataState.recordDeleted(identifier: identifier)
-        navigationPath.removeAll()
+        nestedEditHabitIdentifier = nil
+        presentedRoute = nil
     }
 
     private var scheduledHabits: [Habit] {
-        HabitDaySorter.sorted(
-            displayedHabits.filter {
-                $0.isScheduled(on: selectedDate, calendar: calendar)
-            },
-            for: selectedDate,
-            completionCounts: completionCounts,
-            calendar: calendar
-        )
+        displayedHabits.filter {
+            $0.isScheduled(on: selectedDate, calendar: calendar)
+        }
     }
 
     private var displayedHabits: [Habit] {
-        appDataState.visibleHabits(from: habits)
+        data.habits
     }
 
     private var progressByDayKey: [String: Double] {
@@ -252,27 +309,15 @@ struct HabitsView: View {
     }
 
     private var completedIdentifiers: Set<String> {
-        HabitCompletionIndex.identifiers(
-            in: completionCounts,
-            habits: displayedHabits
-        )
+        data.completedIdentifiers
     }
 
     private var completionCounts: [String: Int] {
-        appDataState.visibleCompletionCounts(
-            from: HabitCompletionIndex.counts(in: completions)
-        )
+        data.completionCounts
     }
 
     private func recordCountChange(identifier: String, count: Int) {
         appDataState.recordCount(identifier: identifier, count: count)
-    }
-
-    private func reconcileAppDataState() {
-        appDataState.reconcile(
-            habits: habits,
-            completionCounts: HabitCompletionIndex.counts(in: completions)
-        )
     }
 
     private func returnToToday() {
@@ -293,39 +338,41 @@ struct HabitsView: View {
         )
         returnTransitionEdge = isReturningFromFuture ? .leading : .trailing
 
-        withAnimation(.snappy(duration: 0.35)) {
+        let animation: Animation = accessibilityReduceMotion
+            ? .easeOut(duration: 0.12)
+            : .snappy(duration: 0.35)
+        handleDayNavigationInteractionChanged(true)
+        withAnimation(animation) {
             selectedDate = today
             displayedWeekStart = todayWeekStart
+            calendarScrollOffset = 0
             dayTransitionID += 1
             if isChangingWeek {
                 calendarTransitionID += 1
             }
         }
+        handleDayNavigationInteractionChanged(false)
     }
 
-    @ViewBuilder
-    private var pullActionIndicator: some View {
-        Group {
-            if let pullAction {
-                Label(
-                    pullActionTitle(for: pullAction),
-                    systemImage: pullActionSystemImage(for: pullAction)
-                )
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background(.thinMaterial, in: Capsule())
-                .opacity(returnPullProgress)
-                .scaleEffect(0.86 + 0.14 * returnPullProgress)
-                .offset(y: 8 * CGFloat(returnPullProgress))
-            }
+    private func handleDayNavigationInteractionChanged(_ isActive: Bool) {
+        isDayNavigationActive = isActive
+        showsDayScrollIndicator = false
+        scrollIndicatorRestoreID += 1
+    }
+
+    private func restoreDayScrollIndicator() async {
+        guard !isDayNavigationActive, !showsDayScrollIndicator else { return }
+
+        do {
+            try await Task.sleep(
+                for: .milliseconds(accessibilityReduceMotion ? 120 : 280)
+            )
+        } catch {
+            return
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: pullIndicatorHeight)
-        .clipped()
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
+
+        guard !Task.isCancelled, !isDayNavigationActive else { return }
+        showsDayScrollIndicator = true
     }
 
     private var canReturnToToday: Bool {
@@ -351,24 +398,37 @@ struct HabitsView: View {
         return displayedWeekStart > todayWeekStart ? "arrow.left" : "arrow.right"
     }
 
-    private var returnPullProgress: Double {
-        min(max(Double(returnPullDistance / returnPullThreshold), 0), 1)
+    private var returnPullThreshold: CGFloat {
+        scheduledHabits.isEmpty ? emptyReturnPullThreshold : listReturnPullThreshold
     }
 
     private var pullIndicatorHeight: CGFloat {
-        guard pullAction != nil else { return 0 }
-        return 52 * CGFloat(returnPullProgress)
+        guard displayedPullAction != nil else { return 0 }
+
+        let distanceBeforeThreshold = min(pullInteractionState.distance, returnPullThreshold)
+        let distanceAfterThreshold = max(
+            pullInteractionState.distance - returnPullThreshold,
+            0
+        )
+        let resistedDistance = distanceBeforeThreshold * 0.68
+            + distanceAfterThreshold * 0.16
+        return min(max(resistedDistance, 0), maximumPullIndicatorHeight)
     }
 
     private var pullActionGesture: some Gesture {
         // Pull-to-refresh would communicate a data refresh and display a spinner.
         // SwiftUI has no native pull gesture for navigation, so this scoped drag
         // preserves the requested return-to-today interaction without false UI.
-        DragGesture(minimumDistance: 8)
+        DragGesture(minimumDistance: 3)
             .onChanged { value in
+                guard scheduledHabits.isEmpty else { return }
+
                 let translation = value.translation
+                let availableAction = pullInteractionState.startDistance == nil
+                    ? pullAction
+                    : pullInteractionState.actionSnapshot
                 guard
-                    pullAction != nil,
+                    availableAction != nil,
                     isDayContentAtTop,
                     translation.height > 0,
                     abs(translation.height) > abs(translation.width)
@@ -377,107 +437,108 @@ struct HabitsView: View {
                     return
                 }
 
-                returnPullDistance = translation.height
-                let isReady = translation.height >= returnPullThreshold
-                if isReady, !isReturnPullReady {
-                    returnFeedbackTrigger += 1
+                if pullInteractionState.startDistance == nil {
+                    pullInteractionState.startDistance = translation.height
+                    pullInteractionState.actionSnapshot = availableAction
                 }
-                isReturnPullReady = isReady
+                let pullDistance = max(
+                    translation.height
+                        - (pullInteractionState.startDistance ?? translation.height),
+                    0
+                )
+                pullInteractionState.distance = pullDistance
+                updatePullReadiness(
+                    for: pullDistance,
+                    threshold: emptyReturnPullThreshold
+                )
             }
             .onEnded { value in
+                guard scheduledHabits.isEmpty else { return }
+
                 let translation = value.translation
-                let action = pullAction
+                let action = pullInteractionState.actionSnapshot
                 let shouldPerform = action != nil
                     && isDayContentAtTop
-                    && translation.height >= returnPullThreshold
+                    && pullInteractionState.isReady
                     && abs(translation.height) > abs(translation.width)
 
-                resetReturnPull()
                 if shouldPerform, let action {
-                    performPullAction(action)
+                    finishPullAction(action)
+                } else {
+                    resetReturnPull()
                 }
             }
+    }
+
+    private func handleListPullChanged(_ distance: CGFloat) {
+        if pullInteractionState.actionSnapshot == nil, distance > 0 {
+            pullInteractionState.actionSnapshot = pullAction
+        }
+        guard pullInteractionState.actionSnapshot != nil else {
+            pullInteractionState.distance = 0
+            pullInteractionState.isReady = false
+            return
+        }
+
+        pullInteractionState.distance = distance
+        updatePullReadiness(for: distance, threshold: listReturnPullThreshold)
+    }
+
+    private func updatePullReadiness(for distance: CGFloat, threshold: CGFloat) {
+        if !pullInteractionState.isReady, distance >= threshold {
+            pullInteractionState.feedbackTrigger += 1
+            pullInteractionState.isReady = true
+        } else if pullInteractionState.isReady, distance < threshold - 12 {
+            pullInteractionState.isReady = false
+        }
+    }
+
+    private func handleListPullEnded() {
+        if pullInteractionState.isReady,
+           let action = pullInteractionState.actionSnapshot {
+            pullInteractionState.pendingAction = action
+        } else {
+            pullInteractionState.pendingAction = nil
+        }
+        resetReturnPull()
+    }
+
+    private func handleListPullRebounded() {
+        guard let action = pullInteractionState.pendingAction else { return }
+
+        pullInteractionState.pendingAction = nil
+        performPullAction(action)
+    }
+
+    private var displayedPullAction: HabitsPullAction? {
+        pullInteractionState.actionSnapshot ?? pullAction
     }
 
     private var pullAction: HabitsPullAction? {
-        if canReturnToToday {
-            return .returnToToday
-        }
-
-        guard let action = HabitSectionExpansionPolicy.actionAfterPull(
-            hasCompletedSection: hasCompletedSection,
-            isCompletedSectionExpanded: prefersCompletedSectionExpanded,
-            hasCountersSection: hasCountersSection,
-            isCountersSectionExpanded: prefersCountersSectionExpanded
-        ) else {
-            return nil
-        }
-        return .setSectionExpanded(action.section, action.isExpanded)
+        canReturnToToday ? .returnToToday : nil
     }
 
-    private var hasCountersSection: Bool {
-        scheduledHabits.contains {
-            $0.kind == .counter && $0.effectiveTargetCount == nil
-        }
-    }
-
-    private var hasCompletedSection: Bool {
-        scheduledHabits.contains {
-            HabitDaySorter.belongsToCompletedSection($0, count: count(for: $0))
-        }
-    }
-
-    private func count(for habit: Habit) -> Int {
-        let dayKey = WeekCalendar.dayKey(for: selectedDate, calendar: calendar)
-        let identifier = HabitCompletion.identifier(
-            habitID: habit.identifier,
-            dayKey: dayKey
-        )
-        return completionCounts[identifier, default: 0]
-    }
-
-    private func pullActionTitle(for action: HabitsPullAction) -> LocalizedStringKey {
-        switch action {
-        case .returnToToday:
-            return "Сегодня"
-        case .setSectionExpanded(_, true):
-            return "Развернуть"
-        case .setSectionExpanded(_, false):
-            return "Свернуть"
-        }
-    }
-
-    private func pullActionSystemImage(for action: HabitsPullAction) -> String {
-        switch action {
-        case .returnToToday:
-            return returnToTodaySystemImage
-        case .setSectionExpanded(_, true):
-            return "chevron.down"
-        case .setSectionExpanded(_, false):
-            return "chevron.up"
-        }
+    private func finishPullAction(_ action: HabitsPullAction) {
+        resetReturnPull()
+        performPullAction(action)
     }
 
     private func performPullAction(_ action: HabitsPullAction) {
         switch action {
         case .returnToToday:
             returnToToday()
-        case .setSectionExpanded(let section, let isExpanded):
-            withAnimation(.smooth(duration: 0.32)) {
-                switch section {
-                case .completed:
-                    prefersCompletedSectionExpanded = isExpanded
-                case .counters:
-                    prefersCountersSectionExpanded = isExpanded
-                }
-            }
         }
     }
 
     private func resetReturnPull() {
-        withAnimation(.easeOut(duration: 0.15)) {
-            returnPullDistance = 0
-            isReturnPullReady = false
+        pullInteractionState.startDistance = nil
+        pullInteractionState.actionSnapshot = nil
+        let animation: Animation = accessibilityReduceMotion
+            ? .easeOut(duration: 0.12)
+            : .smooth(duration: 0.18)
+        withAnimation(animation) {
+            pullInteractionState.distance = 0
+            pullInteractionState.isReady = false
         }
     }
 
@@ -497,4 +558,16 @@ struct HabitsView: View {
         }
     }
 
+}
+
+private struct HabitsTabBarBackground: ViewModifier {
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 26, *) {
+            content
+                .toolbarBackground(.hidden, for: .tabBar)
+        } else {
+            content
+        }
+    }
 }

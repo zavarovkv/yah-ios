@@ -105,7 +105,9 @@ struct HabitAppearancePicker: View {
     }
 
     private func iconButton(_ candidate: String) -> some View {
-        Button {
+        let iconNumber = (HabitAppearanceOptions.icons.firstIndex(of: candidate) ?? 0) + 1
+
+        return Button {
             icon = candidate
         } label: {
             Image(systemName: candidate)
@@ -124,7 +126,7 @@ struct HabitAppearancePicker: View {
         }
         .buttonStyle(.plain)
         .frame(minWidth: 44, minHeight: 44)
-        .accessibilityLabel("Выбрать иконку")
+        .accessibilityLabel("Иконка \(iconNumber)")
         .accessibilityAddTraits(icon == candidate ? .isSelected : [])
     }
 
@@ -168,6 +170,8 @@ private struct AppearancePageControl: UIViewRepresentable {
         let pageControl = UIPageControl()
         pageControl.backgroundStyle = .minimal
         pageControl.hidesForSinglePage = true
+        pageControl.currentPageIndicatorTintColor = .label
+        pageControl.pageIndicatorTintColor = .tertiaryLabel
         pageControl.addTarget(
             context.coordinator,
             action: #selector(Coordinator.pageChanged(_:)),

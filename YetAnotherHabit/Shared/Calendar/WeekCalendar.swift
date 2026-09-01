@@ -58,19 +58,50 @@ enum WeekCalendar {
         return symbol.prefix(1).uppercased(with: locale) + symbol.dropFirst()
     }
 
-    static func mondayBasedWeekday(for date: Date, calendar: Calendar) -> Int {
+    static func weekdayAccessibilityTitle(
+        forMondayBasedIndex index: Int,
+        locale: Locale
+    ) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = locale
+        let normalizedIndex = ((index % 7) + 7) % 7
+        let sundayBasedIndex = (normalizedIndex + 1) % 7
+        return calendar.standaloneWeekdaySymbols[sundayBasedIndex]
+    }
+
+    nonisolated static func mondayBasedWeekday(for date: Date, calendar: Calendar) -> Int {
         let weekday = mondayBased(calendar).component(.weekday, from: date)
         return (weekday + 5) % 7
     }
 
     static func dayKey(for date: Date, calendar: Calendar) -> String {
-        let components = calendar.dateComponents([.year, .month, .day], from: date)
+        let components = persistenceCalendar(basedOn: calendar)
+            .dateComponents([.year, .month, .day], from: date)
         return String(
             format: "%04d-%02d-%02d",
             components.year ?? 0,
             components.month ?? 0,
             components.day ?? 0
         )
+    }
+
+    static func date(forDayKey dayKey: String, calendar: Calendar) -> Date? {
+        let parts = dayKey.split(separator: "-", omittingEmptySubsequences: false)
+        guard
+            parts.count == 3,
+            let year = Int(parts[0]),
+            let month = Int(parts[1]),
+            let day = Int(parts[2])
+        else {
+            return nil
+        }
+
+        guard let date = persistenceCalendar(basedOn: calendar).date(
+            from: DateComponents(year: year, month: month, day: day)
+        ), Self.dayKey(for: date, calendar: calendar) == dayKey else {
+            return nil
+        }
+        return date
     }
 
     static func selectedDate(
@@ -90,10 +121,16 @@ enum WeekCalendar {
             : endOfWeek(starting: weekStart, calendar: calendar)
     }
 
-    private static func mondayBased(_ calendar: Calendar) -> Calendar {
+    nonisolated private static func mondayBased(_ calendar: Calendar) -> Calendar {
         var calendar = calendar
         calendar.firstWeekday = 2
         calendar.minimumDaysInFirstWeek = 4
         return calendar
+    }
+
+    private static func persistenceCalendar(basedOn calendar: Calendar) -> Calendar {
+        var persistenceCalendar = Calendar(identifier: .gregorian)
+        persistenceCalendar.timeZone = calendar.timeZone
+        return persistenceCalendar
     }
 }

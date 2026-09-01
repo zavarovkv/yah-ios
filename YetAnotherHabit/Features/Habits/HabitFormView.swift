@@ -2,6 +2,8 @@ import SwiftUI
 
 struct HabitFormView: View {
     @Environment(\.locale) private var locale
+    @Environment(\.calendar) private var calendar
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @Binding var draft: HabitDraft
 
     let actionTitle: LocalizedStringKey
@@ -10,12 +12,14 @@ struct HabitFormView: View {
     var deleteAction: (() -> Void)?
 
     @State private var isPresentingAppearance = false
+    @State private var targetSliderFeedback = 0
 
     var body: some View {
         Form {
             nameSection
             scheduleSection
-            typeSection
+            propertiesSection
+            reminderSection
 
             if showsActionButton {
                 actionSection
@@ -92,12 +96,18 @@ struct HabitFormView: View {
                     .accessibilityAddTraits(
                         draft.scheduledWeekdays.contains(weekday) ? .isSelected : []
                     )
+                    .accessibilityLabel(
+                        WeekCalendar.weekdayAccessibilityTitle(
+                            forMondayBasedIndex: weekday,
+                            locale: locale
+                        )
+                    )
                 }
             }
         }
     }
 
-    private var typeSection: some View {
+    private var propertiesSection: some View {
         Section {
             Picker("Тип", selection: $draft.kind) {
                 Label("Привычка", systemImage: "checkmark.circle")
@@ -106,20 +116,101 @@ struct HabitFormView: View {
                     .tag(HabitKind.counter)
             }
             .pickerStyle(.navigationLink)
+            .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
 
             if draft.kind == .counter {
+                Picker("Интервал", selection: $draft.counterInterval) {
+                    Text("Ежедневно").tag(CounterInterval.daily)
+                    Text("Еженедельно").tag(CounterInterval.weekly)
+                    Text("Каждые две недели").tag(CounterInterval.biweekly)
+                    Text("Ежемесячно").tag(CounterInterval.monthly)
+                    if draft.counterInterval == .yearly {
+                        Text("Ежегодно").tag(CounterInterval.yearly)
+                    }
+                }
+                .pickerStyle(.navigationLink)
+
+                Toggle("Установить цель", isOn: targetEnabled)
+
+                if draft.targetCount != nil {
+                    targetEditor
+                        .transition(targetEditorTransition)
+                }
+            }
+        } header: {
+            Text("Свойства")
+        } footer: {
+            if draft.kind == .counter, draft.targetCount != nil {
+                Text("Цель отмечает интервал выполненным, но не ограничивает значение счётчика.")
+            }
+        }
+    }
+
+    private var targetEditor: some View {
+        VStack(spacing: 10) {
+            HStack {
+                Text("Значение")
+
+                Spacer()
+
                 TextField(
-                    "Цель (необязательно)",
-                    value: $draft.targetCount,
+                    "Значение",
+                    value: targetCount,
                     format: .number
                 )
                 .keyboardType(.numberPad)
+                .multilineTextAlignment(.trailing)
+                .monospacedDigit()
+                .frame(minWidth: 64, maxWidth: 120)
+                .accessibilityLabel("Значение")
+            }
+
+            Slider(
+                value: targetSliderPosition,
+                in: HabitTargetScale.positions,
+                step: 1
+            ) {
+                Text("Цель")
+            } minimumValueLabel: {
+                Text(HabitTargetScale.minimumValue, format: .number)
+            } maximumValueLabel: {
+                Text(
+                    HabitTargetScale.maximumValue,
+                    format: .number.notation(.compactName)
+                )
+            }
+            .font(.caption)
+            .accessibilityValue(
+                Text(draft.targetCount ?? HabitTargetScale.defaultValue, format: .number)
+            )
+            .sensoryFeedback(.selection, trigger: targetSliderFeedback)
+        }
+    }
+
+    private var targetEditorTransition: AnyTransition {
+        accessibilityReduceMotion
+            ? .identity
+            : .opacity.combined(with: .move(edge: .top))
+    }
+
+    private var reminderSection: some View {
+        Section {
+            Toggle("Напоминать", isOn: reminderEnabled)
+
+            if draft.hasReminder {
+                DatePicker(
+                    "Время",
+                    selection: reminderTime,
+                    displayedComponents: .hourAndMinute
+                )
+                .datePickerStyle(.compact)
+                .transition(targetEditorTransition)
             }
         } header: {
-            Text("Тип")
+            Text("Напоминание")
         } footer: {
-            if draft.kind == .counter {
-                Text("Цель отмечает день выполненным, но не ограничивает значение счётчика.")
+            if draft.hasReminder {
+                Text("Уведомление придёт в выбранные дни недели.")
             }
         }
     }
@@ -145,5 +236,83 @@ struct HabitFormView: View {
         } else {
             draft.scheduledWeekdays.insert(weekday)
         }
+    }
+
+    private var targetEnabled: Binding<Bool> {
+        Binding(
+            get: { draft.targetCount != nil },
+            set: { isEnabled in
+                withAnimation(
+                    accessibilityReduceMotion ? nil : .snappy(duration: 0.25)
+                ) {
+                    draft.targetCount = isEnabled
+                        ? (draft.targetCount ?? HabitTargetScale.defaultValue)
+                        : nil
+                }
+            }
+        )
+    }
+
+    private var reminderEnabled: Binding<Bool> {
+        Binding(
+            get: { draft.hasReminder },
+            set: { isEnabled in
+                withAnimation(
+                    accessibilityReduceMotion ? nil : .snappy(duration: 0.25)
+                ) {
+                    if isEnabled {
+                        draft.setReminder(hour: 9, minute: 0)
+                    } else {
+                        draft.setReminder(hour: nil, minute: nil)
+                    }
+                }
+            }
+        )
+    }
+
+    private var reminderTime: Binding<Date> {
+        Binding(
+            get: {
+                calendar.date(
+                    bySettingHour: draft.reminderHour ?? 9,
+                    minute: draft.reminderMinute ?? 0,
+                    second: 0,
+                    of: .now
+                ) ?? .now
+            },
+            set: { date in
+                let components = calendar.dateComponents([.hour, .minute], from: date)
+                draft.setReminder(hour: components.hour, minute: components.minute)
+            }
+        )
+    }
+
+    private var targetCount: Binding<Int> {
+        Binding(
+            get: { draft.targetCount ?? HabitTargetScale.defaultValue },
+            set: {
+                draft.targetCount = min(
+                    max($0, HabitTargetScale.minimumValue),
+                    HabitTargetScale.maximumValue
+                )
+            }
+        )
+    }
+
+    private var targetSliderPosition: Binding<Double> {
+        Binding(
+            get: {
+                HabitTargetScale.position(
+                    for: draft.targetCount ?? HabitTargetScale.defaultValue
+                )
+            },
+            set: { position in
+                let value = HabitTargetScale.value(at: position)
+                guard value != draft.targetCount else { return }
+
+                draft.targetCount = value
+                targetSliderFeedback += 1
+            }
+        )
     }
 }

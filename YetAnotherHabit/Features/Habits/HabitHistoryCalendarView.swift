@@ -3,6 +3,7 @@ import SwiftUI
 struct HabitHistoryCalendarView: View {
     @Environment(\.calendar) private var calendar
     @Environment(\.locale) private var locale
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
 
     let habit: Habit
     let completedIdentifiers: Set<String>
@@ -146,13 +147,22 @@ struct HabitHistoryCalendarView: View {
         date: Date
     ) -> Text {
         if habit.kind == .counter {
-            let identifier = HabitCompletion.identifier(
-                habitID: habit.identifier,
-                dayKey: WeekCalendar.dayKey(for: date, calendar: calendar)
+            let identifier = HabitCompletionPeriod.identifier(
+                for: habit,
+                containing: date,
+                calendar: calendar
             )
-            return Text("Количество: \(completionCounts[identifier, default: 0])")
+            return statusAccessibilityValue(for: status)
+                + Text(", ")
+                + Text("Количество: \(completionCounts[identifier, default: 0])")
         }
 
+        return statusAccessibilityValue(for: status)
+    }
+
+    private func statusAccessibilityValue(
+        for status: HabitAnalyticsCalculator.DayStatus
+    ) -> Text {
         switch status {
         case .completed:
             return Text("Выполнено")
@@ -174,7 +184,9 @@ struct HabitHistoryCalendarView: View {
     }
 
     private func moveMonth(by value: Int) {
-        withAnimation(.easeInOut(duration: 0.2)) {
+        withAnimation(
+            accessibilityReduceMotion ? nil : .easeInOut(duration: 0.2)
+        ) {
             displayedMonth = MonthGrid.addingMonths(
                 value,
                 to: displayedMonth,

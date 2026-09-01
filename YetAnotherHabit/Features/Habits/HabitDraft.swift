@@ -7,6 +7,9 @@ struct HabitDraft: Equatable {
     var color: HabitColor
     var scheduledWeekdays: Set<Int>
     var targetCount: Int?
+    var counterInterval: CounterInterval
+    var reminderHour: Int?
+    var reminderMinute: Int?
 
     init(
         kind: HabitKind = .habit,
@@ -14,7 +17,10 @@ struct HabitDraft: Equatable {
         icon: String = "checkmark",
         color: HabitColor = .blue,
         scheduledWeekdays: Set<Int> = Set(0..<7),
-        targetCount: Int? = nil
+        targetCount: Int? = nil,
+        counterInterval: CounterInterval = .daily,
+        reminderHour: Int? = nil,
+        reminderMinute: Int? = nil
     ) {
         self.kind = kind
         self.name = name
@@ -22,6 +28,10 @@ struct HabitDraft: Equatable {
         self.color = color
         self.scheduledWeekdays = Set(Habit.normalizedWeekdays(scheduledWeekdays))
         self.targetCount = Habit.normalizedTargetCount(targetCount, kind: kind)
+        self.counterInterval = counterInterval
+        self.reminderHour = nil
+        self.reminderMinute = nil
+        setReminder(hour: reminderHour, minute: reminderMinute)
     }
 
     init(habit: Habit) {
@@ -31,7 +41,10 @@ struct HabitDraft: Equatable {
             icon: habit.icon,
             color: HabitColor(rawValue: habit.color) ?? .blue,
             scheduledWeekdays: Set(habit.scheduledWeekdays),
-            targetCount: habit.effectiveTargetCount
+            targetCount: habit.effectiveTargetCount,
+            counterInterval: habit.effectiveCounterInterval,
+            reminderHour: habit.reminderHour,
+            reminderMinute: habit.reminderMinute
         )
     }
 
@@ -51,7 +64,10 @@ struct HabitDraft: Equatable {
             scheduledWeekdays: scheduledWeekdays.sorted(),
             createdAt: createdAt,
             kind: kind,
-            targetCount: normalizedTargetCount
+            targetCount: normalizedTargetCount,
+            counterInterval: normalizedCounterInterval,
+            reminderHour: reminderHour,
+            reminderMinute: reminderMinute
         )
     }
 
@@ -61,11 +77,45 @@ struct HabitDraft: Equatable {
         habit.color = color.rawValue
         habit.scheduledWeekdays = Habit.normalizedWeekdays(scheduledWeekdays)
         habit.kind = kind
+        habit.counterInterval = normalizedCounterInterval
         habit.targetCount = normalizedTargetCount
+        habit.setReminder(hour: reminderHour, minute: reminderMinute)
     }
 
     var normalizedTargetCount: Int? {
         Habit.normalizedTargetCount(targetCount, kind: kind)
+    }
+
+    var normalizedCounterInterval: CounterInterval {
+        kind == .counter ? counterInterval : .daily
+    }
+
+    var hasReminder: Bool {
+        reminderHour != nil && reminderMinute != nil
+    }
+
+    mutating func setReminder(hour: Int?, minute: Int?) {
+        guard let hour, let minute,
+              (0..<24).contains(hour),
+              (0..<60).contains(minute)
+        else {
+            reminderHour = nil
+            reminderMinute = nil
+            return
+        }
+        reminderHour = hour
+        reminderMinute = minute
+    }
+
+    func changesReminder(of habit: Habit) -> Bool {
+        reminderHour != habit.reminderHour || reminderMinute != habit.reminderMinute
+    }
+
+    func changesHistoricalRules(of habit: Habit) -> Bool {
+        kind != habit.kind
+            || Habit.normalizedWeekdays(scheduledWeekdays) != habit.scheduledWeekdays
+            || normalizedTargetCount != habit.effectiveTargetCount
+            || normalizedCounterInterval != habit.effectiveCounterInterval
     }
 
     static func randomized() -> HabitDraft {

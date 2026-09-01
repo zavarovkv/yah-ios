@@ -8,6 +8,7 @@ struct WeekCalendarPagerView: View {
     @Binding var displayedWeekStart: Date
     @Binding var selectedDate: Date
     let progressByDayKey: [String: Double]
+    let onNavigationInteractionChanged: (Bool) -> Void
 
     var body: some View {
         GeometryReader { geometry in
@@ -27,10 +28,14 @@ struct WeekCalendarPagerView: View {
             .defaultScrollAnchor(.center)
             .onScrollPhaseChange { _, newPhase in
                 if newPhase == .tracking || newPhase == .interacting {
+                    if !isPagingByGesture {
+                        onNavigationInteractionChanged(true)
+                    }
                     isPagingByGesture = true
                 } else if newPhase == .idle, isPagingByGesture {
                     isPagingByGesture = false
                     commitVisiblePage()
+                    onNavigationInteractionChanged(false)
                 } else if newPhase == .idle {
                     recenterPage()
                 }
@@ -46,9 +51,9 @@ struct WeekCalendarPagerView: View {
         .accessibilityAdjustableAction { direction in
             switch direction {
             case .increment:
-                moveWeek(by: 1)
+                moveWeekWithNavigationFeedback(by: 1)
             case .decrement:
-                moveWeek(by: -1)
+                moveWeekWithNavigationFeedback(by: -1)
             @unknown default:
                 break
             }
@@ -65,7 +70,8 @@ struct WeekCalendarPagerView: View {
             WeekCalendarView(
                 weekStart: weekStart,
                 selectedDate: $selectedDate,
-                progressByDayKey: progressByDayKey
+                progressByDayKey: progressByDayKey,
+                onNavigationInteractionChanged: onNavigationInteractionChanged
             )
             .padding(.horizontal)
             .padding(.vertical, 4)
@@ -108,5 +114,11 @@ struct WeekCalendarPagerView: View {
             direction: value,
             calendar: calendar
         )
+    }
+
+    private func moveWeekWithNavigationFeedback(by value: Int) {
+        onNavigationInteractionChanged(true)
+        moveWeek(by: value)
+        onNavigationInteractionChanged(false)
     }
 }

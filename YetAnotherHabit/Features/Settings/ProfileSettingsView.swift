@@ -14,6 +14,7 @@ struct ProfileSettingsView: View {
     @State private var isCameraPresented = false
     @State private var errorMessage: String?
     @State private var avatarTask: Task<Void, Never>?
+    @State private var avatarTaskID: UUID?
     @FocusState private var isNameFocused: Bool
 
     init(profile: UserProfile) {
@@ -120,7 +121,10 @@ struct ProfileSettingsView: View {
         guard let selectedPhoto else { return }
 
         avatarTask?.cancel()
+        let taskID = UUID()
+        avatarTaskID = taskID
         avatarTask = Task {
+            defer { finishAvatarTask(taskID) }
             do {
                 guard
                     let data = try await selectedPhoto.loadTransferable(type: Data.self),
@@ -145,9 +149,18 @@ struct ProfileSettingsView: View {
 
     private func prepareAvatar(_ image: UIImage) {
         avatarTask?.cancel()
+        let taskID = UUID()
+        avatarTaskID = taskID
         avatarTask = Task {
+            defer { finishAvatarTask(taskID) }
             await resizeAndSaveAvatar(image)
         }
+    }
+
+    private func finishAvatarTask(_ taskID: UUID) {
+        guard avatarTaskID == taskID else { return }
+        avatarTask = nil
+        avatarTaskID = nil
     }
 
     private func resizeAndSaveAvatar(_ image: UIImage) async {

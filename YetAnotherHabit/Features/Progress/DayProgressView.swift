@@ -1,18 +1,19 @@
-import SwiftData
 import SwiftUI
 
 struct DayProgressView: View {
     @Environment(\.calendar) private var calendar
     @Environment(\.locale) private var locale
-    @Environment(AppDataState.self) private var appDataState
-    @Query private var habits: [Habit]
-    @Query(filter: #Predicate<HabitCompletion> { $0.isCompleted })
-    private var completions: [HabitCompletion]
 
+    let data: HabitPresentationData
     let date: Date
 
     var body: some View {
         let identifiers = completedIdentifiers
+        let sections = HabitDaySorter.sections(
+            in: scheduledHabits,
+            for: date,
+            calendar: calendar
+        ) { count(for: $0) }
 
         NavigationStack {
             Group {
@@ -23,17 +24,25 @@ struct DayProgressView: View {
                         description: Text("Для выбранной даты ничего не запланировано.")
                     )
                 } else {
-                    List(scheduledHabits) { habit in
-                        ReadOnlyHabitRowView(
-                            habit: habit,
-                            count: count(for: habit),
-                            streak: streak(
-                                for: habit,
-                                completedIdentifiers: identifiers
-                            )
+                    List {
+                        habitSection(
+                            title: "Не выполнено",
+                            habits: sections.pending,
+                            completedIdentifiers: identifiers
+                        )
+                        habitSection(
+                            title: "Счётчики",
+                            habits: sections.openCounters,
+                            completedIdentifiers: identifiers
+                        )
+                        habitSection(
+                            title: "Выполнено",
+                            habits: sections.completed,
+                            completedIdentifiers: identifiers
                         )
                     }
                     .listStyle(.plain)
+                    .contentMargins(.top, 0, for: .scrollContent)
                     .scrollContentBackground(.hidden)
                 }
             }
@@ -51,10 +60,34 @@ struct DayProgressView: View {
         }
     }
 
+    @ViewBuilder
+    private func habitSection(
+        title: LocalizedStringKey,
+        habits: [Habit],
+        completedIdentifiers: Set<String>
+    ) -> some View {
+        if !habits.isEmpty {
+            Section {
+                HabitSectionHeaderView(title: title, count: habits.count)
+                    .habitSectionHeaderRowStyle()
+
+                ForEach(habits) { habit in
+                    ReadOnlyHabitRowView(
+                        habit: habit,
+                        count: count(for: habit),
+                        streak: streak(
+                            for: habit,
+                            completedIdentifiers: completedIdentifiers
+                        )
+                    )
+                }
+            }
+        }
+    }
+
     private var scheduledHabits: [Habit] {
-        let visibleHabits = appDataState.visibleHabits(from: habits)
         return HabitDaySorter.sorted(
-            visibleHabits.filter { $0.isScheduled(on: date, calendar: calendar) },
+            data.habits.filter { $0.isScheduled(on: date, calendar: calendar) },
             for: date,
             completionCounts: completionCounts,
             calendar: calendar
@@ -62,9 +95,10 @@ struct DayProgressView: View {
     }
 
     private func count(for habit: Habit) -> Int {
-        let identifier = HabitCompletion.identifier(
-            habitID: habit.identifier,
-            dayKey: WeekCalendar.dayKey(for: date, calendar: calendar)
+        let identifier = HabitCompletionPeriod.identifier(
+            for: habit,
+            containing: date,
+            calendar: calendar
         )
         return completionCounts[identifier, default: 0]
     }
@@ -73,7 +107,18 @@ struct DayProgressView: View {
         for habit: Habit,
         completedIdentifiers: Set<String>
     ) -> Int {
-        HabitStreakCalculator.streak(
+        guard habit.kind == .habit else { return 0 }
+
+        if !habit.isGoalMet(by: count(for: habit)) {
+            return HabitStreakCalculator.streakBefore(
+                date,
+                for: habit,
+                completedIdentifiers: completedIdentifiers,
+                calendar: calendar
+            )
+        }
+
+        return HabitStreakCalculator.streak(
             for: habit,
             through: date,
             completedIdentifiers: completedIdentifiers,
@@ -82,15 +127,10 @@ struct DayProgressView: View {
     }
 
     private var completedIdentifiers: Set<String> {
-        HabitCompletionIndex.identifiers(
-            in: completionCounts,
-            habits: appDataState.visibleHabits(from: habits)
-        )
+        data.completedIdentifiers
     }
 
     private var completionCounts: [String: Int] {
-        appDataState.visibleCompletionCounts(
-            from: HabitCompletionIndex.counts(in: completions)
-        )
+        data.completionCounts
     }
 }

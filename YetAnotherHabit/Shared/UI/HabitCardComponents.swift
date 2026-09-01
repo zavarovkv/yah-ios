@@ -1,6 +1,46 @@
 import SwiftUI
 
+enum HabitCardVisualState: Equatable {
+    case pending
+    case counter
+    case completed
+
+    init(habit: Habit, isCompleted: Bool) {
+        if isCompleted {
+            self = .completed
+        } else if habit.kind == .counter {
+            self = .counter
+        } else {
+            self = .pending
+        }
+    }
+
+    var fillColor: Color {
+        switch self {
+        case .pending:
+            Color.secondary.opacity(0.08)
+        case .counter:
+            Color.orange.opacity(0.12)
+        case .completed:
+            Color.green.opacity(0.12)
+        }
+    }
+
+    var borderColor: Color {
+        switch self {
+        case .pending:
+            Color.secondary.opacity(0.1)
+        case .counter:
+            Color.orange.opacity(0.18)
+        case .completed:
+            Color.green.opacity(0.18)
+        }
+    }
+}
+
 struct HabitStatusIconView: View {
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+
     let habit: Habit
     let isCompleted: Bool
 
@@ -10,14 +50,25 @@ struct HabitStatusIconView: View {
                 ? "checkmark"
                 : habit.icon
         )
+            .contentTransition(.symbolEffect(.replace))
+            .symbolEffect(
+                .bounce,
+                options: .nonRepeating,
+                value: accessibilityReduceMotion ? false : isCompleted
+            )
             .font(.headline)
-            .foregroundStyle(habitColor.foregroundColor)
+            .foregroundStyle(habitColor.color)
             .frame(width: 40, height: 40)
             .background(
-                isCompleted ? Color.white.opacity(0.22) : habitColor.color,
+                habitColor.color.opacity(isCompleted ? 0.24 : 0.16),
                 in: Circle()
             )
-            .opacity(isCompleted ? 1 : 0.55)
+            .opacity(isCompleted ? 1 : 0.72)
+            .transaction { transaction in
+                if accessibilityReduceMotion {
+                    transaction.animation = nil
+                }
+            }
     }
 
     private var habitColor: HabitColor {
@@ -35,68 +86,86 @@ struct HabitSummaryView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(habit.name)
                 .font(.body.weight(.medium))
-                .lineLimit(1)
+                .lineLimit(2)
                 .truncationMode(.tail)
 
             if habit.kind == .counter {
                 counterSubtitle
                     .font(.caption)
-                    .foregroundStyle(
-                        isCompleted ? completedForegroundColor.opacity(0.8) : .secondary
-                    )
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-            } else if isCompleted, streak >= 2 {
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            } else if streak >= 2 {
                 Text("Серия из \(streak) дней")
                     .font(.caption)
-                    .foregroundStyle(completedForegroundColor.opacity(0.8))
+                    .foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var counterSubtitle: Text {
-        if let target = habit.effectiveTargetCount {
-            Text("\(count) из \(target)")
-        } else {
-            Text("Количество: \(count)")
+        switch (habit.effectiveCounterInterval, habit.effectiveTargetCount) {
+        case (.daily, .some(let target)):
+            Text("\(count) из \(target) сегодня")
+        case (.daily, .none):
+            Text("\(count) сегодня")
+        case (.weekly, .some(let target)):
+            Text("\(count) из \(target) на этой неделе")
+        case (.weekly, .none):
+            Text("\(count) на этой неделе")
+        case (.biweekly, .some(let target)):
+            Text("\(count) из \(target) за две недели")
+        case (.biweekly, .none):
+            Text("\(count) за две недели")
+        case (.monthly, .some(let target)):
+            Text("\(count) из \(target) в этом месяце")
+        case (.monthly, .none):
+            Text("\(count) в этом месяце")
+        case (.yearly, .some(let target)):
+            Text("\(count) из \(target) в этом году")
+        case (.yearly, .none):
+            Text("\(count) в этом году")
         }
     }
 
-    private var completedForegroundColor: Color {
-        (HabitColor(rawValue: habit.color) ?? .blue).foregroundColor
-    }
 }
 
 private struct HabitCardStyle: ViewModifier {
-    let habit: Habit
-    let isCompleted: Bool
+    let state: HabitCardVisualState
 
     func body(content: Content) -> some View {
         content
-            .foregroundStyle(isCompleted ? habitColor.foregroundColor : .primary)
+            .foregroundStyle(.primary)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(
-                        isCompleted
-                            ? habitColor.color
-                            : habitColor.color.opacity(0.12)
-                    )
+                let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
+
+                shape
+                    .fill(state.fillColor)
+                    .overlay {
+                        shape.strokeBorder(
+                            state.borderColor,
+                            lineWidth: 1
+                        )
+                    }
             }
-            .listRowInsets(EdgeInsets(top: 3, leading: 16, bottom: 3, trailing: 16))
+            .padding(.vertical, 2)
+            .listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 2, trailing: 16))
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
-    }
-
-    private var habitColor: HabitColor {
-        HabitColor(rawValue: habit.color) ?? .blue
     }
 }
 
 extension View {
     func habitCardStyle(habit: Habit, isCompleted: Bool) -> some View {
-        modifier(HabitCardStyle(habit: habit, isCompleted: isCompleted))
+        modifier(
+            HabitCardStyle(
+                state: HabitCardVisualState(
+                    habit: habit,
+                    isCompleted: isCompleted
+                )
+            )
+        )
     }
 }

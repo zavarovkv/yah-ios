@@ -1,6 +1,12 @@
 import Foundation
 
 enum HabitDaySorter {
+    struct Sections {
+        let pending: [Habit]
+        let openCounters: [Habit]
+        let completed: [Habit]
+    }
+
     static func belongsToCompletedSection(_ habit: Habit, count: Int) -> Bool {
         switch habit.kind {
         case .habit:
@@ -11,23 +17,50 @@ enum HabitDaySorter {
         }
     }
 
+    static func movesToCompletedSection(
+        _ habit: Habit,
+        from previousCount: Int,
+        to newCount: Int
+    ) -> Bool {
+        !belongsToCompletedSection(habit, count: previousCount)
+            && belongsToCompletedSection(habit, count: newCount)
+    }
+
+    static func belongsToCountersSection(
+        _ habit: Habit,
+        count: Int,
+        on date: Date,
+        calendar: Calendar
+    ) -> Bool {
+        guard
+            habit.kind == .counter,
+            !belongsToCompletedSection(habit, count: count)
+        else {
+            return false
+        }
+
+        return habit.effectiveTargetCount == nil
+            || !HabitCompletionPeriod.isGoalDue(for: habit, on: date, calendar: calendar)
+    }
+
     static func incompleteCount(
         in habits: [Habit],
         for date: Date,
         completionCounts: [String: Int],
         calendar: Calendar
     ) -> Int {
-        let dayKey = WeekCalendar.dayKey(for: date, calendar: calendar)
         return habits.lazy.filter { habit in
-            guard
-                habit.contributesToDailyGoal,
-                habit.isScheduled(on: date, calendar: calendar)
-            else {
+            guard HabitCompletionPeriod.isGoalDue(
+                for: habit,
+                on: date,
+                calendar: calendar
+            ) else {
                 return false
             }
-            let identifier = HabitCompletion.identifier(
-                habitID: habit.identifier,
-                dayKey: dayKey
+            let identifier = HabitCompletionPeriod.identifier(
+                for: habit,
+                containing: date,
+                calendar: calendar
             )
             return !habit.isGoalMet(by: completionCounts[identifier, default: 0])
         }.count
@@ -39,18 +72,18 @@ enum HabitDaySorter {
         completionCounts: [String: Int],
         calendar: Calendar
     ) -> [Habit] {
-        let dayKey = WeekCalendar.dayKey(for: date, calendar: calendar)
-
         return habits.sorted { lhs, rhs in
             let lhsRank = rank(
                 for: lhs,
-                dayKey: dayKey,
-                completionCounts: completionCounts
+                date: date,
+                completionCounts: completionCounts,
+                calendar: calendar
             )
             let rhsRank = rank(
                 for: rhs,
-                dayKey: dayKey,
-                completionCounts: completionCounts
+                date: date,
+                completionCounts: completionCounts,
+                calendar: calendar
             )
 
             if lhsRank != rhsRank {
@@ -63,19 +96,63 @@ enum HabitDaySorter {
         }
     }
 
-    private static func rank(
-        for habit: Habit,
-        dayKey: String,
-        completionCounts: [String: Int]
-    ) -> Int {
-        if habit.kind == .counter, habit.effectiveTargetCount == nil {
-            return 2
+    static func sections(
+        in habits: [Habit],
+        for date: Date,
+        calendar: Calendar,
+        countFor: (Habit) -> Int
+    ) -> Sections {
+        var pending: [Habit] = []
+        var openCounters: [Habit] = []
+        var completed: [Habit] = []
+
+        for habit in habits {
+            let count = countFor(habit)
+
+            if belongsToCompletedSection(habit, count: count) {
+                completed.append(habit)
+            } else if belongsToCountersSection(
+                habit,
+                count: count,
+                on: date,
+                calendar: calendar
+            ) {
+                openCounters.append(habit)
+            } else if habit.contributesToDailyGoal {
+                pending.append(habit)
+            }
         }
 
-        let identifier = HabitCompletion.identifier(
-            habitID: habit.identifier,
-            dayKey: dayKey
+        return Sections(
+            pending: pending,
+            openCounters: openCounters,
+            completed: completed
         )
-        return habit.isGoalMet(by: completionCounts[identifier, default: 0]) ? 1 : 0
+    }
+
+    private static func rank(
+        for habit: Habit,
+        date: Date,
+        completionCounts: [String: Int],
+        calendar: Calendar
+    ) -> Int {
+        let identifier = HabitCompletionPeriod.identifier(
+            for: habit,
+            containing: date,
+            calendar: calendar
+        )
+        let count = completionCounts[identifier, default: 0]
+        if belongsToCompletedSection(habit, count: count) {
+            return 1
+        }
+        if belongsToCountersSection(
+            habit,
+            count: count,
+            on: date,
+            calendar: calendar
+        ) {
+            return 2
+        }
+        return 0
     }
 }

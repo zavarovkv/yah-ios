@@ -20,8 +20,14 @@ struct AppLockView: View {
                     .multilineTextAlignment(.center)
             }
 
-            Button("Разблокировать") {
+            Button {
                 Task { await appLock.authenticate(locale: locale) }
+            } label: {
+                if appLock.isAuthenticating {
+                    ProgressView()
+                } else {
+                    Text("Разблокировать")
+                }
             }
             .buttonStyle(.borderedProminent)
             .disabled(appLock.isAuthenticating)

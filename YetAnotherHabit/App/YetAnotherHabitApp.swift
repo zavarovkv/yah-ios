@@ -3,6 +3,8 @@ import SwiftUI
 
 @main
 struct YetAnotherHabitApp: App {
+    @UIApplicationDelegateAdaptor(AppNotificationDelegate.self)
+    private var notificationDelegate
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(AppPreferenceKey.theme) private var appTheme = AppTheme.system
     @AppStorage(AppPreferenceKey.language) private var appLanguage = AppLanguage.system

@@ -1,14 +1,11 @@
-import SwiftData
 import SwiftUI
 
 struct MonthCalendarView: View {
     @Environment(\.calendar) private var calendar
     @Environment(\.locale) private var locale
-    @Environment(AppDataState.self) private var appDataState
-    @Query private var habits: [Habit]
-    @Query(filter: #Predicate<HabitCompletion> { $0.isCompleted })
-    private var completions: [HabitCompletion]
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
 
+    let data: HabitPresentationData
     @Binding var selectedDate: Date?
     let resetID: Int
     let onDateSelected: (Date) -> Void
@@ -16,34 +13,28 @@ struct MonthCalendarView: View {
     @State private var visiblePage: Int? = 0
 
     init(
+        data: HabitPresentationData,
         selectedDate: Binding<Date?>,
         resetID: Int,
+        initialCalendar: Calendar,
         onDateSelected: @escaping (Date) -> Void
     ) {
+        self.data = data
         _selectedDate = selectedDate
         self.resetID = resetID
         self.onDateSelected = onDateSelected
         _displayedMonth = State(
             initialValue: MonthGrid.start(
                 of: selectedDate.wrappedValue ?? .now,
-                calendar: .autoupdatingCurrent
+                calendar: initialCalendar
             )
         )
     }
 
     var body: some View {
-        let visibleHabits = appDataState.visibleHabits(from: habits)
-        let visibleCompletionCounts = appDataState.visibleCompletionCounts(
-            from: HabitCompletionIndex.counts(in: completions)
-        )
-        let visibleCompletionIdentifiers = HabitCompletionIndex.identifiers(
-            in: visibleCompletionCounts,
-            habits: visibleHabits
-        )
-
         VStack(spacing: 14) {
             HStack {
-                Button { moveMonth(by: -1) } label: {
+                Button { moveMonth(by: -1, animated: true) } label: {
                     Image(systemName: "chevron.left")
                         .frame(width: 44, height: 44)
                 }
@@ -56,10 +47,11 @@ struct MonthCalendarView: View {
 
                 Spacer()
 
-                Button { moveMonth(by: 1) } label: {
+                Button { moveMonth(by: 1, animated: true) } label: {
                     Image(systemName: "chevron.right")
                         .frame(width: 44, height: 44)
                 }
+                .disabled(!canMoveToNextMonth)
                 .accessibilityLabel("Следующий месяц")
             }
 
@@ -68,8 +60,8 @@ struct MonthCalendarView: View {
                     ForEach(-1...1, id: \.self) { offset in
                         monthPage(
                             offset: offset,
-                            habits: visibleHabits,
-                            completedIdentifiers: visibleCompletionIdentifiers
+                            habits: data.habits,
+                            completedIdentifiers: data.completedIdentifiers
                         )
                             .containerRelativeFrame(.horizontal)
                             .id(offset)
@@ -90,7 +82,9 @@ struct MonthCalendarView: View {
         .padding(.horizontal)
         .contentShape(Rectangle())
         .onChange(of: resetID) {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(
+                accessibilityReduceMotion ? nil : .easeInOut(duration: 0.2)
+            ) {
                 displayedMonth = MonthGrid.start(of: .now, calendar: calendar)
                 visiblePage = 0
             }
@@ -237,12 +231,22 @@ struct MonthCalendarView: View {
         )
     }
 
-    private func moveMonth(by value: Int) {
-        displayedMonth = MonthGrid.addingMonths(
-            value,
-            to: displayedMonth,
-            calendar: calendar
-        )
+    private var canMoveToNextMonth: Bool {
+        displayedMonth < MonthGrid.start(of: .now, calendar: calendar)
+    }
+
+    private func moveMonth(by value: Int, animated: Bool) {
+        withAnimation(
+            animated && !accessibilityReduceMotion
+                ? .easeInOut(duration: 0.2)
+                : nil
+        ) {
+            displayedMonth = MonthGrid.addingMonths(
+                value,
+                to: displayedMonth,
+                calendar: calendar
+            )
+        }
     }
 
     private func commitVisiblePage() {
@@ -251,7 +255,9 @@ struct MonthCalendarView: View {
         var transaction = Transaction()
         transaction.disablesAnimations = true
         withTransaction(transaction) {
-            moveMonth(by: visiblePage)
+            if visiblePage < 0 || canMoveToNextMonth {
+                moveMonth(by: visiblePage, animated: false)
+            }
             self.visiblePage = 0
         }
     }

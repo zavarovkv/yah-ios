@@ -18,6 +18,128 @@ Yet Another Habit is a native iOS 18+ habit tracker built with SwiftUI and Swift
 - `YetAnotherHabitTests`: unit and in-memory persistence tests.
 - `.github/workflows`: continuous integration configuration.
 
+## Architecture contract
+
+Treat the following as architectural invariants. Extend these paths instead of
+introducing parallel sources of truth or duplicating business rules.
+
+### Composition and data flow
+
+- `YetAnotherHabitApp` is the composition root. It owns the persistence,
+  optimistic app state, lock state, locale, and theme, then injects them through
+  the SwiftUI environment.
+- `ContentView` owns the root SwiftData queries and builds one
+  `HabitPresentationData` snapshot for feature screens. Keep transient tab state
+  below this query boundary so tab selection and tab icon animations do not
+  rebuild the completion index for the full history.
+- The persisted `@Query` results are authoritative. `AppDataState` may only bridge
+  the short delay after a successful save; it must reconcile and discard its
+  overrides as soon as the queries contain the saved values.
+- Feature views receive presentation snapshots and user actions. They must not
+  create a second long-lived cache of habits or completions.
+
+### Persistence and completion writes
+
+- All habit-completion writes go through `HabitCompletionStore`. Completion keys
+  are canonical `habit UUID | WeekCalendar.dayKey` identifiers and counts are
+  non-negative integers, not independent Boolean state.
+- Save SwiftData first and record the corresponding `AppDataState` override only
+  after the save succeeds. A failed write must not leave optimistic UI behind.
+- `HabitCompletionIndex` is the boundary that converts persisted completion
+  models into read-optimized count and completed-identifier snapshots. Reuse one
+  snapshot within a render/update pass rather than repeatedly scanning model
+  arrays in rows.
+- `DataMaintenance` repairs legacy and duplicate data. Repairs must be idempotent,
+  versioned when they need to run once, and must preserve the largest meaningful
+  counter value.
+- The active model is `AppSchemaV6` with `AppMigrationPlan`. Never edit an old
+  versioned schema in place. Add a new version and migration stage while keeping
+  existing stores readable.
+- Production persistence is currently configured with `cloudKitDatabase: .none`.
+  Do not enable CloudKit or alter entitlements until the real App ID and CloudKit
+  container identifier are supplied and migration/sync behavior is tested.
+
+### Domain calculations
+
+- `WeekCalendar` owns normalized days, stable day keys, Monday-based weeks, and
+  navigation boundaries. `HabitCompletionPeriod` owns daily, weekly, biweekly,
+  monthly, and legacy yearly counter buckets. New habits may choose the first
+  four intervals; keep yearly readable for existing data, but do not offer it in
+  the editor unless the product decision changes deliberately.
+- `HabitDayPolicy` decides whether a habit is visible/actionable for a day.
+  `HabitDaySorter` owns section membership and ordering.
+- `HabitProgressCalculator`, `HabitStreakCalculator`, and
+  `HabitAnalyticsCalculator` own progress, streak, and analytics semantics.
+  Views may format their results but must not reproduce those algorithms.
+- Counter values are preserved as counts. A target counter becomes complete only
+  when its target is reached; a counter without a target is not silently treated
+  as a Boolean habit or included in measurable progress.
+- A pending regular habit may display its already-earned streak, but the selected
+  pending day must never be counted. Use `HabitStreakCalculator.streakBefore`
+  instead of changing the persisted or analytics definition of current streak.
+- Pass an explicit `Calendar` through calculations and initializers. A view must
+  not initialize calendar state with a different calendar than the environment
+  used to update it.
+
+### UI, security, and performance boundaries
+
+- `AppTabView` is the only owner of app-wide tab-bar behavior. On iOS 26 it uses
+  the native `tabBarMinimizeBehavior(.onScrollDown)`. Feature scroll views must
+  not move, resize, or change the minimization policy themselves.
+  Keep the iOS 26 tab item structure stable during scrolling and render both the
+  expanded count and compact dot into one fixed-size habit icon; do not mutate a
+  native `.badge` mid-transition. Derive compactness from the presentation-layer
+  visibility of the native tab-item titles; do not infer badge presentation from
+  animation delays. Scroll direction may wake this visual observer and an upward
+  gesture may temporarily force expansion from any list position, but it must
+  not directly choose between count and dot. Release the temporary expansion
+  policy while the bar enters its visually expanded range and when the scroll
+  interaction ends, so `.onScrollDown` is active before the next gesture. Detect
+  direction from small cumulative travel rather than isolated frame deltas.
+  Switch the fixed icon artwork with hysteresis during the real native morph,
+  without an intermediate hidden indicator. Do not add a bottom accessory solely
+  to observe placement.
+  Keep the habits root navigation stack unbound: iOS 26 does not reliably expand
+  the native tab bar when its scrolling content is inside `NavigationStack(path:)`.
+- Keep accordion, drag, pull, and completion-transition state local to the owning
+  feature. Gesture code may decide intent; it must delegate mutations and domain
+  decisions to the stores/calculators above.
+- Preserve the current pull behavior contract: a downward pull may return
+  navigation to today, but must not introduce a second hidden/revealed screen
+  state unless that interaction is deliberately redesigned and tested.
+- Views kept alive only for transitions must skip expensive work while hidden.
+  In particular, do not calculate streaks or scan completion history for
+  zero-opacity/collapsed rows.
+- Respect Reduce Motion for decorative movement while preserving immediate state
+  feedback and native navigation behavior.
+- `HabitReminderScheduler` is the only owner of local habit-notification
+  identifiers and scheduling. Store only the optional hour/minute on `Habit`;
+  derive repeating weekday requests from the habit schedule. Ask for permission
+  only after the user explicitly enables a reminder. Coordinate scheduling with
+  persistence so a failed save restores/removes requests, and remove requests
+  after deletion.
+- Habit card backgrounds communicate status through `HabitCardVisualState`:
+  neutral for pending habits, orange for counters in progress, and green for
+  completed goals. A habit's user-selected color belongs only to its icon and
+  compact icon background; do not use it to tint the full card.
+- `AppLockController` is the single owner of authentication state. Keep
+  `LocalAuthentication` behind `AppAuthenticationContext` so behavior stays
+  deterministic in tests. When locked, render `AppLockView` instead of placing it
+  over live sensitive content.
+- Avoid unbounded repeated work in `body`: build indexes once at an owning
+  boundary, pass value snapshots downward, use stable identities, and do not add
+  per-row SwiftData fetches. If completion history outgrows an in-memory snapshot,
+  evolve it with scoped fetches or persisted aggregates plus migrations rather
+  than adding another full-history cache.
+
+### Architecture change checklist
+
+Before changing these boundaries, document why the existing owner cannot support
+the requirement, update this section, and add tests at the affected boundary.
+At minimum verify strict concurrency, calendar/time-zone determinism, optimistic
+state reconciliation, migration safety, locked-content privacy, and that tab or
+row animations do not trigger history-wide recomputation.
+
 ## Development principles
 
 - Prefer native Apple frameworks and controls. Do not add a dependency when the platform API is sufficient.

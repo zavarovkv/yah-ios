@@ -12,7 +12,9 @@ struct PersistenceTests {
         let habit = Habit(
             name: "Читать",
             icon: "book.fill",
-            color: "blue"
+            color: "blue",
+            reminderHour: 8,
+            reminderMinute: 30
         )
 
         context.insert(habit)
@@ -21,6 +23,7 @@ struct PersistenceTests {
         let habits = try context.fetch(FetchDescriptor<Habit>())
         #expect(habits.count == 1)
         #expect(habits.first?.name == "Читать")
+        #expect(habits.first?.reminderComponents == DateComponents(hour: 8, minute: 30))
     }
 
     @Test
@@ -63,9 +66,9 @@ struct PersistenceTests {
             try context.save()
         }
 
-        let schema = Schema(versionedSchema: AppSchemaV3.self)
+        let schema = Schema(versionedSchema: AppSchemaV6.self)
         let configuration = ModelConfiguration(
-            "MigrationV3",
+            "MigrationV5",
             schema: schema,
             url: storeURL,
             cloudKitDatabase: .none
@@ -84,8 +87,129 @@ struct PersistenceTests {
         #expect(habit.name == "Читать")
         #expect(habit.kind == .habit)
         #expect(habit.targetCount == nil)
+        #expect(habit.effectiveCounterInterval == .daily)
+        #expect(habit.reminderComponents == nil)
         #expect(completion.count == 1)
         #expect(completion.habit?.identifier == habit.identifier)
+    }
+
+    @Test
+    func migrationKeepsExistingCountersDaily() throws {
+        let directoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(
+            at: directoryURL,
+            withIntermediateDirectories: true
+        )
+        defer { try? FileManager.default.removeItem(at: directoryURL) }
+        let storeURL = directoryURL.appendingPathComponent("CounterMigration.store")
+
+        do {
+            let schema = Schema(versionedSchema: AppSchemaV3.self)
+            let configuration = ModelConfiguration(
+                "CounterMigrationV3",
+                schema: schema,
+                url: storeURL,
+                cloudKitDatabase: .none
+            )
+            let container = try ModelContainer(for: schema, configurations: configuration)
+            let context = ModelContext(container)
+            context.insert(
+                AppSchemaV3.Habit(
+                    name: "Кофе",
+                    icon: "cup.and.saucer.fill",
+                    color: "brown",
+                    kind: .counter,
+                    targetCount: 4
+                )
+            )
+            try context.save()
+        }
+
+        let schema = Schema(versionedSchema: AppSchemaV6.self)
+        let configuration = ModelConfiguration(
+            "CounterMigrationV5",
+            schema: schema,
+            url: storeURL,
+            cloudKitDatabase: .none
+        )
+        let container = try ModelContainer(
+            for: schema,
+            migrationPlan: AppMigrationPlan.self,
+            configurations: configuration
+        )
+        let habit = try #require(
+            ModelContext(container).fetch(FetchDescriptor<Habit>()).first
+        )
+
+        #expect(habit.kind == .counter)
+        #expect(habit.effectiveTargetCount == 4)
+        #expect(habit.counterInterval == .daily)
+    }
+
+    @Test
+    func migrationFromV5RemovesBooleanStateAndPreservesCount() throws {
+        let directoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(
+            at: directoryURL,
+            withIntermediateDirectories: true
+        )
+        defer { try? FileManager.default.removeItem(at: directoryURL) }
+        let storeURL = directoryURL.appendingPathComponent("CompletionV6Migration.store")
+
+        do {
+            let schema = Schema(versionedSchema: AppSchemaV5.self)
+            let configuration = ModelConfiguration(
+                "CompletionMigrationV5",
+                schema: schema,
+                url: storeURL,
+                cloudKitDatabase: .none
+            )
+            let container = try ModelContainer(for: schema, configurations: configuration)
+            let context = ModelContext(container)
+            let habit = AppSchemaV5.Habit(
+                name: "Вода",
+                icon: "drop.fill",
+                color: "blue",
+                kind: .counter,
+                targetCount: 8,
+                reminderHour: 9,
+                reminderMinute: 15
+            )
+            context.insert(habit)
+            context.insert(
+                AppSchemaV5.HabitCompletion(
+                    date: Date(timeIntervalSince1970: 1_700_000_000),
+                    dayKey: "2023-11-14",
+                    count: 6,
+                    habit: habit
+                )
+            )
+            try context.save()
+        }
+
+        let schema = Schema(versionedSchema: AppSchemaV6.self)
+        let configuration = ModelConfiguration(
+            "CompletionMigrationV6",
+            schema: schema,
+            url: storeURL,
+            cloudKitDatabase: .none
+        )
+        let container = try ModelContainer(
+            for: schema,
+            migrationPlan: AppMigrationPlan.self,
+            configurations: configuration
+        )
+        let context = ModelContext(container)
+        let habit = try #require(context.fetch(FetchDescriptor<Habit>()).first)
+        let completion = try #require(
+            context.fetch(FetchDescriptor<HabitCompletion>()).first
+        )
+
+        #expect(completion.count == 6)
+        #expect(completion.habit?.identifier == habit.identifier)
+        #expect(habit.reminderComponents == DateComponents(hour: 9, minute: 15))
     }
 
     @Test
@@ -165,7 +289,7 @@ struct PersistenceTests {
     }
 
     @Test
-    func completingHabitRepairsInactiveCanonicalRecord() throws {
+    func completingHabitRepairsEmptyCanonicalRecord() throws {
         let container = try makeContainer()
         let context = container.mainContext
         var calendar = Calendar(identifier: .gregorian)
@@ -178,7 +302,7 @@ struct PersistenceTests {
         let completion = HabitCompletion(
             date: date,
             dayKey: dayKey,
-            isCompleted: false,
+            count: 0,
             habit: habit
         )
         context.insert(habit)
@@ -196,7 +320,6 @@ struct PersistenceTests {
         let storedCompletion = try #require(
             context.fetch(FetchDescriptor<HabitCompletion>()).first
         )
-        #expect(storedCompletion.isCompleted)
         #expect(storedCompletion.dayKey == dayKey)
         #expect(storedCompletion.date == calendar.startOfDay(for: date))
         #expect(storedCompletion.count == 1)
@@ -232,7 +355,6 @@ struct PersistenceTests {
             context.fetch(FetchDescriptor<HabitCompletion>()).first
         )
         #expect(completion.count == 3)
-        #expect(completion.isCompleted)
 
         try HabitCompletionStore.setCount(
             5,
@@ -254,6 +376,133 @@ struct PersistenceTests {
             context: context
         )
         #expect(try context.fetch(FetchDescriptor<HabitCompletion>()).isEmpty)
+    }
+
+    @Test
+    func weeklyCounterUsesOneValueUntilTheNextWeek() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let monday = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 17))
+        )
+        let friday = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 21))
+        )
+        let nextMonday = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 24))
+        )
+        let habit = Habit(
+            name: "Кофе",
+            icon: "cup.and.saucer.fill",
+            color: "brown",
+            kind: .counter,
+            counterInterval: .weekly
+        )
+        context.insert(habit)
+        try context.save()
+
+        try HabitCompletionStore.setCount(
+            3,
+            habit: habit,
+            date: monday,
+            calendar: calendar,
+            context: context
+        )
+        try HabitCompletionStore.setCount(
+            5,
+            habit: habit,
+            date: friday,
+            calendar: calendar,
+            context: context
+        )
+        try HabitCompletionStore.setCount(
+            1,
+            habit: habit,
+            date: nextMonday,
+            calendar: calendar,
+            context: context
+        )
+
+        let completions = try context.fetch(FetchDescriptor<HabitCompletion>())
+        #expect(completions.count == 2)
+        #expect(
+            completions.first {
+                $0.identifier == HabitCompletionPeriod.identifier(
+                    for: habit,
+                    containing: friday,
+                    calendar: calendar
+                )
+            }?.count == 5
+        )
+        #expect(
+            completions.first {
+                $0.identifier == HabitCompletionPeriod.identifier(
+                    for: habit,
+                    containing: nextMonday,
+                    calendar: calendar
+                )
+            }?.count == 1
+        )
+    }
+
+    @Test
+    func changingCounterIntervalPreservesHistoryByCombiningDailyValues() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let monday = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 17))
+        )
+        let tuesday = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 18))
+        )
+        let habit = Habit(
+            name: "Кофе",
+            icon: "cup.and.saucer.fill",
+            color: "brown",
+            kind: .counter
+        )
+        context.insert(habit)
+        try context.save()
+
+        try HabitCompletionStore.setCount(
+            2,
+            habit: habit,
+            date: monday,
+            calendar: calendar,
+            context: context
+        )
+        try HabitCompletionStore.setCount(
+            3,
+            habit: habit,
+            date: tuesday,
+            calendar: calendar,
+            context: context
+        )
+
+        habit.counterInterval = .weekly
+        try HabitCompletionStore.rebucketCompletions(
+            for: habit,
+            calendar: calendar,
+            context: context
+        )
+        try context.save()
+
+        let completions = try context.fetch(FetchDescriptor<HabitCompletion>())
+        let completion = try #require(completions.first)
+        #expect(completions.count == 1)
+        #expect(completion.count == 5)
+        #expect(completion.date == monday)
+        #expect(
+            completion.identifier == HabitCompletionPeriod.identifier(
+                for: habit,
+                containing: tuesday,
+                calendar: calendar
+            )
+        )
     }
 
     @Test
@@ -341,7 +590,54 @@ struct PersistenceTests {
     }
 
     @Test
-    func maintenanceRemovesInactiveCompletionRecords() throws {
+    func maintenancePreservesLogicalDayAcrossTimeZoneChanges() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        var moscowCalendar = Calendar(identifier: .gregorian)
+        moscowCalendar.timeZone = try #require(TimeZone(identifier: "Europe/Moscow"))
+        var newYorkCalendar = Calendar(identifier: .gregorian)
+        newYorkCalendar.timeZone = try #require(TimeZone(identifier: "America/New_York"))
+        let date = try #require(
+            moscowCalendar.date(
+                from: DateComponents(year: 2026, month: 8, day: 24)
+            )
+        )
+        let habit = Habit(
+            name: "Читать",
+            icon: "book.fill",
+            color: "blue",
+            createdAt: date
+        )
+        let completion = HabitCompletion(
+            date: date,
+            dayKey: "2026-08-24",
+            habit: habit
+        )
+        context.insert(habit)
+        context.insert(completion)
+        try context.save()
+
+        try DataMaintenance.reconcile(
+            context: context,
+            calendar: newYorkCalendar,
+            locale: Locale(identifier: "en")
+        )
+
+        let storedCompletion = try #require(
+            context.fetch(FetchDescriptor<HabitCompletion>()).first
+        )
+        #expect(storedCompletion.dayKey == "2026-08-24")
+        #expect(
+            storedCompletion.identifier
+                == HabitCompletion.identifier(
+                    habitID: habit.identifier,
+                    dayKey: "2026-08-24"
+                )
+        )
+    }
+
+    @Test
+    func maintenanceRemovesEmptyCompletionRecords() throws {
         let container = try makeContainer()
         let context = container.mainContext
         let habit = Habit(name: "Читать", icon: "book.fill", color: "blue")
@@ -350,7 +646,7 @@ struct PersistenceTests {
             HabitCompletion(
                 date: .now,
                 dayKey: "2026-08-17",
-                isCompleted: false,
+                count: 0,
                 habit: habit
             )
         )
@@ -495,7 +791,7 @@ struct PersistenceTests {
     }
 
     private func makeContainer() throws -> ModelContainer {
-        let schema = Schema(versionedSchema: AppSchemaV3.self)
+        let schema = Schema(versionedSchema: AppSchemaV6.self)
         let configuration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: true,

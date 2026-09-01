@@ -1,7 +1,119 @@
+import Observation
 import SwiftData
 import SwiftUI
 
+private struct HabitDayScrollMetrics: Equatable {
+    let isAtTop: Bool
+    let pullDistance: CGFloat
+    let scrollOffset: CGFloat
+}
+
+struct HabitDayTabBarScrollDirectionResolver {
+    // A little more cumulative travel is required before an upward gesture
+    // requests expansion, avoiding a mode change from incidental finger jitter.
+    private static let downwardDirectionalTravel: CGFloat = 4
+    private static let upwardDirectionalTravel: CGFloat = 24
+    private var referenceOffset: CGFloat?
+    private var lastDirectionWasDown: Bool?
+
+    mutating func beginInteraction(at offset: CGFloat) {
+        referenceOffset = offset
+        lastDirectionWasDown = nil
+    }
+
+    mutating func direction(
+        at offset: CGFloat,
+        isUserInteracting: Bool
+    ) -> Bool? {
+        guard isUserInteracting else { return nil }
+        guard let referenceOffset else {
+            self.referenceOffset = offset
+            return nil
+        }
+
+        switch lastDirectionWasDown {
+        case nil:
+            let travel = offset - referenceOffset
+            if travel >= Self.downwardDirectionalTravel {
+                lastDirectionWasDown = true
+                self.referenceOffset = offset
+                return true
+            }
+            if travel <= -Self.upwardDirectionalTravel {
+                lastDirectionWasDown = false
+                self.referenceOffset = offset
+                return false
+            }
+        case true:
+            if offset > referenceOffset {
+                self.referenceOffset = offset
+            } else if referenceOffset - offset >= Self.upwardDirectionalTravel {
+                lastDirectionWasDown = false
+                self.referenceOffset = offset
+                return false
+            }
+        case false:
+            if offset < referenceOffset {
+                self.referenceOffset = offset
+            } else if offset - referenceOffset >= Self.downwardDirectionalTravel {
+                lastDirectionWasDown = true
+                self.referenceOffset = offset
+                return true
+            }
+        }
+
+        return nil
+    }
+
+    mutating func endInteraction() {
+        referenceOffset = nil
+        lastDirectionWasDown = nil
+    }
+}
+
+@MainActor
+@Observable
+private final class HabitDayScrollInteractionState {
+    var isInteracting = false
+    var didPullDuringInteraction = false
+    var isAwaitingRebound = false
+    var latestPullDistance: CGFloat = 0
+    var latestScrollOffset: CGFloat = 0
+    @ObservationIgnored var tabBarDirectionResolver =
+        HabitDayTabBarScrollDirectionResolver()
+}
+
+private enum HabitDayListSection: Hashable {
+    case pending
+    case counters
+    case completed
+}
+
+private enum HabitDayListItem: Identifiable {
+    enum ID: Hashable {
+        case dailySuccess
+        case header(HabitDayListSection)
+        case habit(UUID, HabitDayListSection)
+    }
+
+    case dailySuccess
+    case header(HabitDayListSection, count: Int)
+    case habit(Habit, section: HabitDayListSection)
+
+    var id: ID {
+        switch self {
+        case .dailySuccess:
+            return .dailySuccess
+        case .header(let section, _):
+            return .header(section)
+        case .habit(let habit, let section):
+            return .habit(habit.identifier, section)
+        }
+    }
+}
+
 struct HabitDayListView: View {
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @Environment(\.calendar) private var calendar
     @Environment(\.modelContext) private var modelContext
 
@@ -13,116 +125,220 @@ struct HabitDayListView: View {
     let onOpenHabit: (UUID) -> Void
     let onEditHabit: (UUID) -> Void
     let onScrollTopChanged: (Bool) -> Void
+    let onScrollOffsetChanged: (CGFloat) -> Void
+    let onTabBarScrollDirectionChanged: (Bool) -> Void
+    let onTabBarScrollInteractionEnded: () -> Void
+    let onPullChanged: (CGFloat) -> Void
+    let onPullEnded: () -> Void
+    let onPullRebounded: () -> Void
+    let topInset: CGFloat
+    let pullReboundCompletionDistance: CGFloat
+    let showsScrollIndicator: Bool
     @Binding var prefersCompletedSectionExpanded: Bool
     @Binding var prefersCountersSectionExpanded: Bool
     @Binding var persistenceError: String?
+    @State private var completionMoveState = HabitCompletionMoveState()
+    @State private var scrollInteractionState = HabitDayScrollInteractionState()
 
     var body: some View {
+        let sections = HabitDaySorter.sections(
+            in: habits,
+            for: selectedDate,
+            calendar: calendar
+        ) { sectionCount(for: $0) }
+        let listItems = listItems(for: sections)
+
         List {
-            if showsDailySuccessBanner {
-                Section {
-                    dailySuccessBanner
-                }
-            }
+            Color.clear
+                .frame(height: topInset)
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .accessibilityHidden(true)
 
-            if !pendingHabits.isEmpty {
-                Section {
-                    sectionHeaderLabel(
-                        title: "Не выполнено",
-                        count: pendingHabits.count,
-                        isExpanded: true,
-                        showsDisclosureIndicator: false
-                    )
-                    .habitSectionHeaderRowStyle()
-
-                    ForEach(pendingHabits) { habit in
-                        habitRow(for: habit)
-                    }
-                }
-            }
-
-            if !openCounterHabits.isEmpty {
-                collapsibleHabitSection(
-                    title: "Счётчики",
-                    count: openCounterHabits.count,
-                    expandedPreference: $prefersCountersSectionExpanded,
-                    expandedHint: "Скрыть счётчики",
-                    collapsedHint: "Показать счётчики"
-                ) {
-                    ForEach(openCounterHabits) { habit in
-                        habitRow(for: habit)
-                    }
-                }
-            }
-
-            if !completedHabits.isEmpty {
-                collapsibleHabitSection(
-                    title: "Выполнено",
-                    count: completedHabits.count,
-                    expandedPreference: $prefersCompletedSectionExpanded,
-                    expandedHint: "Скрыть выполненные привычки",
-                    collapsedHint: "Показать выполненные привычки"
-                ) {
-                    ForEach(completedHabits) { habit in
-                        habitRow(for: habit)
-                    }
-                }
+            ForEach(listItems) { item in
+                listRow(for: item)
             }
         }
         .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .scrollIndicators(
+            showsScrollIndicator ? .automatic : .hidden,
+            axes: .vertical
+        )
+        .scrollClipDisabled()
         .contentMargins(.top, 0, for: .scrollContent)
+        .environment(\.defaultMinListRowHeight, 0)
         .animation(.snappy(duration: 0.3), value: habits.map(\.identifier))
-        .animation(.snappy(duration: 0.25), value: openCounterHabits.count)
-        .animation(.snappy(duration: 0.25), value: completedHabits.count)
-        .onScrollGeometryChange(for: Bool.self) { geometry in
-            geometry.contentOffset.y <= geometry.contentInsets.top + 1
-        } action: { _, isAtTop in
-            onScrollTopChanged(isAtTop)
+        .onScrollGeometryChange(for: HabitDayScrollMetrics.self) { geometry in
+            let verticalOffset = geometry.contentOffset.y + geometry.contentInsets.top
+            return HabitDayScrollMetrics(
+                isAtTop: verticalOffset <= 1,
+                pullDistance: max(-verticalOffset, 0),
+                scrollOffset: max(verticalOffset, 0)
+            )
+        } action: { oldMetrics, metrics in
+            scrollInteractionState.latestPullDistance = metrics.pullDistance
+            scrollInteractionState.latestScrollOffset = metrics.scrollOffset
+            reportTabBarScrollDirection(offset: metrics.scrollOffset)
+            if oldMetrics.isAtTop != metrics.isAtTop {
+                onScrollTopChanged(metrics.isAtTop)
+            }
+            onScrollOffsetChanged(metrics.scrollOffset)
+            if scrollInteractionState.isInteracting,
+               (metrics.pullDistance > 0 || oldMetrics.pullDistance > 0) {
+                scrollInteractionState.didPullDuringInteraction = true
+                onPullChanged(metrics.pullDistance)
+            }
+            if scrollInteractionState.isAwaitingRebound,
+               metrics.pullDistance <= pullReboundCompletionDistance {
+                finishPullRebound()
+            }
+        }
+        .onScrollPhaseChange { oldPhase, newPhase in
+            let wasInteracting = oldPhase == .interacting
+            scrollInteractionState.isInteracting = newPhase == .interacting
+            if newPhase == .interacting {
+                scrollInteractionState.isAwaitingRebound = false
+                scrollInteractionState.tabBarDirectionResolver.beginInteraction(
+                    at: scrollInteractionState.latestScrollOffset
+                )
+            }
+            if wasInteracting, newPhase != .interacting {
+                scrollInteractionState.tabBarDirectionResolver.endInteraction()
+                onTabBarScrollInteractionEnded()
+            }
+            if wasInteracting,
+               newPhase != .interacting,
+               scrollInteractionState.didPullDuringInteraction {
+                scrollInteractionState.didPullDuringInteraction = false
+                scrollInteractionState.isAwaitingRebound = true
+                onPullEnded()
+                if scrollInteractionState.latestPullDistance <= pullReboundCompletionDistance {
+                    finishPullRebound()
+                }
+            }
+            if newPhase == .idle {
+                finishPullRebound()
+            }
+        }
+        .onDisappear {
+            completionMoveState.cancelAll()
+            scrollInteractionState.tabBarDirectionResolver.endInteraction()
+            onTabBarScrollInteractionEnded()
+        }
+        .sensoryFeedback(
+            .success,
+            trigger: completionMoveState.successPresentationTrigger
+        ) { _, _ in
+            dailySuccessSnapshot.isComplete
+        }
+    }
+
+    private func reportTabBarScrollDirection(offset: CGFloat) {
+        guard let isScrollingDown =
+                scrollInteractionState.tabBarDirectionResolver.direction(
+                    at: offset,
+                    isUserInteracting: scrollInteractionState.isInteracting
+                ) else {
+            return
+        }
+
+        onTabBarScrollDirectionChanged(isScrollingDown)
+    }
+
+    private func listItems(
+        for sections: HabitDaySorter.Sections
+    ) -> [HabitDayListItem] {
+        var items: [HabitDayListItem] = []
+
+        if showsDailySuccessBanner {
+            items.append(.dailySuccess)
+        }
+
+        if !sections.pending.isEmpty {
+            items.append(.header(.pending, count: sections.pending.count))
+            items.append(contentsOf: sections.pending.map {
+                .habit($0, section: .pending)
+            })
+        }
+
+        if !sections.openCounters.isEmpty {
+            items.append(.header(.counters, count: sections.openCounters.count))
+            if isSectionExpanded(.counters) {
+                items.append(contentsOf: sections.openCounters.map {
+                    .habit($0, section: .counters)
+                })
+            }
+        }
+
+        if !sections.completed.isEmpty {
+            items.append(.header(.completed, count: sections.completed.count))
+            if isSectionExpanded(.completed) {
+                items.append(contentsOf: sections.completed.map {
+                    .habit($0, section: .completed)
+                })
+            }
+        }
+
+        return items
+    }
+
+    @ViewBuilder
+    private func listRow(for item: HabitDayListItem) -> some View {
+        switch item {
+        case .dailySuccess:
+            dailySuccessBanner
+        case .header(let section, let count):
+            sectionHeaderRow(for: section, count: count)
+        case .habit(let habit, _):
+            habitRow(for: habit)
         }
     }
 
     private var dailySuccessBanner: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.title2)
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.green)
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Все цели достигнуты")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.primary)
-
-                Text("Отличная работа!")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .background(
-            Color.green.opacity(0.12),
-            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
-        )
-        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-        .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
-        .accessibilityElement(children: .combine)
-        .transition(.opacity.combined(with: .scale(scale: 0.96)))
+        DailySuccessBannerView(snapshot: dailySuccessSnapshot)
+            .transition(dailySuccessTransition)
     }
 
     private var showsDailySuccessBanner: Bool {
-        HabitDailySuccessPolicy.shouldShowBanner(
+        dailySuccessSnapshot.isComplete
+    }
+
+    private var dailySuccessSnapshot: HabitDailySuccessPolicy.Snapshot {
+        HabitDailySuccessPolicy.snapshot(
             for: selectedDate,
             habits: habits,
-            completionCounts: completionCounts,
+            completionCounts: presentationCompletionCounts,
             calendar: calendar
         )
     }
 
-    @ViewBuilder
+    private var dailySuccessTransition: AnyTransition {
+        accessibilityReduceMotion
+            ? .opacity
+            : .opacity
+                .combined(with: .move(edge: .top))
+                .combined(with: .scale(scale: 0.96))
+    }
+
+    private var presentationCompletionCounts: [String: Int] {
+        guard completionMoveState.hasDelayedSuccessCounts else {
+            return completionCounts
+        }
+
+        var counts = completionCounts
+        for habit in habits {
+            guard let delayedCount = completionMoveState.successCount(
+                for: habit.identifier
+            ) else {
+                continue
+            }
+            counts[completionIdentifier(for: habit)] = delayedCount
+        }
+        return counts
+    }
+
     private func habitRow(for habit: Habit) -> some View {
         HabitRowView(
             habit: habit,
@@ -133,6 +349,7 @@ struct HabitDayListView: View {
             onCountChanged: { setCount($0, for: habit) },
             onOpenAnalytics: { onOpenHabit(habit.identifier) }
         )
+        .transition(habitSectionTransition)
         .swipeActions(edge: .leading, allowsFullSwipe: false) {
             Button {
                 onEditHabit(habit.identifier)
@@ -157,101 +374,111 @@ struct HabitDayListView: View {
         }
     }
 
+    private func isSectionExpanded(_ section: HabitDayListSection) -> Bool {
+        if isHistoricalDay {
+            return true
+        }
+
+        switch section {
+        case .pending:
+            return true
+        case .counters:
+            return prefersCountersSectionExpanded
+        case .completed:
+            return prefersCompletedSectionExpanded
+        }
+    }
+
     @ViewBuilder
-    private func collapsibleHabitSection<Content: View>(
+    private func sectionHeaderRow(
+        for section: HabitDayListSection,
+        count: Int
+    ) -> some View {
+        switch section {
+        case .pending:
+            HabitSectionHeaderView(
+                title: "Не выполнено",
+                count: count,
+                isExpanded: true,
+                showsDisclosureIndicator: false
+            )
+            .habitSectionHeaderRowStyle()
+        case .counters:
+            collapsibleSectionHeaderRow(
+                title: "Счётчики",
+                count: count,
+                expandedPreference: $prefersCountersSectionExpanded,
+                expandedHint: "Скрыть счётчики",
+                collapsedHint: "Показать счётчики"
+            )
+        case .completed:
+            collapsibleSectionHeaderRow(
+                title: "Выполнено",
+                count: count,
+                expandedPreference: $prefersCompletedSectionExpanded,
+                expandedHint: "Скрыть выполненные привычки",
+                collapsedHint: "Показать выполненные привычки"
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func collapsibleSectionHeaderRow(
         title: LocalizedStringKey,
         count: Int,
         expandedPreference: Binding<Bool>,
         expandedHint: LocalizedStringKey,
-        collapsedHint: LocalizedStringKey,
-        @ViewBuilder content: () -> Content
+        collapsedHint: LocalizedStringKey
     ) -> some View {
         if isHistoricalDay {
-            Section {
-                sectionHeaderLabel(
+            HabitSectionHeaderView(
+                title: title,
+                count: count,
+                isExpanded: true,
+                showsDisclosureIndicator: false
+            )
+            .habitSectionHeaderRowStyle()
+        } else {
+            Button {
+                withAnimation(accordionAnimation) {
+                    expandedPreference.wrappedValue.toggle()
+                }
+            } label: {
+                HabitSectionHeaderView(
                     title: title,
                     count: count,
-                    isExpanded: true,
-                    showsDisclosureIndicator: false
+                    isExpanded: expandedPreference.wrappedValue,
+                    showsDisclosureIndicator: true
                 )
-                .habitSectionHeaderRowStyle()
-
-                content()
             }
-        } else {
-            Section {
-                Button {
-                    withAnimation(.smooth(duration: 0.32)) {
-                        expandedPreference.wrappedValue.toggle()
-                    }
-                } label: {
-                    sectionHeaderLabel(
-                        title: title,
-                        count: count,
-                        isExpanded: expandedPreference.wrappedValue,
-                        showsDisclosureIndicator: true
-                    )
-                }
-                .buttonStyle(.plain)
-                .accessibilityHint(
-                    expandedPreference.wrappedValue ? expandedHint : collapsedHint
-                )
-                .habitSectionHeaderRowStyle()
-
-                if expandedPreference.wrappedValue {
-                    content()
-                }
-            }
+            .buttonStyle(.plain)
+            .accessibilityHint(
+                expandedPreference.wrappedValue ? expandedHint : collapsedHint
+            )
+            .habitSectionHeaderRowStyle()
         }
     }
 
-    private func sectionHeaderLabel(
-        title: LocalizedStringKey,
-        count: Int,
-        isExpanded: Bool,
-        showsDisclosureIndicator: Bool
-    ) -> some View {
-        HStack(spacing: 8) {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary)
-
-            Text(count, format: .number)
-                .font(.caption.weight(.semibold).monospacedDigit())
-                .foregroundStyle(.secondary)
-                .contentTransition(.numericText())
-                .padding(.horizontal, 7)
-                .padding(.vertical, 3)
-                .background(.quaternary, in: Capsule())
-
-            Spacer()
-
-            if showsDisclosureIndicator {
-                Image(systemName: "chevron.down")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.primary)
-                    .rotationEffect(.degrees(isExpanded ? 0 : -90))
-            }
-        }
-        .textCase(nil)
-        .contentShape(Rectangle())
+    private var accordionAnimation: Animation {
+        accessibilityReduceMotion
+            ? .easeOut(duration: 0.12)
+            : .smooth(duration: 0.28)
     }
 
-    private var pendingHabits: [Habit] {
-        habits.filter {
-            $0.contributesToDailyGoal
-                && !HabitDaySorter.belongsToCompletedSection($0, count: count(for: $0))
-        }
+    private var habitSectionTransition: AnyTransition {
+        accessibilityReduceMotion
+            ? .identity
+            : .asymmetric(
+                insertion: .opacity,
+                removal: .identity
+            )
     }
 
-    private var completedHabits: [Habit] {
-        habits.filter {
-            HabitDaySorter.belongsToCompletedSection($0, count: count(for: $0))
-        }
-    }
+    private func finishPullRebound() {
+        guard scrollInteractionState.isAwaitingRebound else { return }
 
-    private var openCounterHabits: [Habit] {
-        habits.filter { $0.kind == .counter && $0.effectiveTargetCount == nil }
+        scrollInteractionState.isAwaitingRebound = false
+        onPullRebounded()
     }
 
     private var isHistoricalDay: Bool {
@@ -266,8 +493,26 @@ struct HabitDayListView: View {
         completionCounts[completionIdentifier(for: habit), default: 0]
     }
 
+    private func sectionCount(for habit: Habit) -> Int {
+        completionMoveState.sectionCount(
+            for: habit.identifier,
+            fallback: count(for: habit)
+        )
+    }
+
     private func streak(for habit: Habit) -> Int {
-        HabitStreakCalculator.streak(
+        guard habit.kind == .habit else { return 0 }
+
+        if !habit.isGoalMet(by: count(for: habit)) {
+            return HabitStreakCalculator.streakBefore(
+                selectedDate,
+                for: habit,
+                completedIdentifiers: completedIdentifiers,
+                calendar: calendar
+            )
+        }
+
+        return HabitStreakCalculator.streak(
             for: habit,
             through: selectedDate,
             completedIdentifiers: completedIdentifiers,
@@ -291,6 +536,7 @@ struct HabitDayListView: View {
         guard canChangeCompletion else { return }
 
         let identifier = completionIdentifier(for: habit)
+        let previousCount = self.count(for: habit)
 
         do {
             try HabitCompletionStore.setCount(
@@ -300,6 +546,15 @@ struct HabitDayListView: View {
                 calendar: calendar,
                 context: modelContext
             )
+
+            if HabitDaySorter.movesToCompletedSection(
+                habit,
+                from: previousCount,
+                to: count
+            ) {
+                delayCompletedSectionMove(for: habit, previousCount: previousCount)
+            }
+
             onCountChanged(identifier, count)
         } catch {
             modelContext.rollback()
@@ -307,23 +562,19 @@ struct HabitDayListView: View {
         }
     }
 
-    private func completionIdentifier(for habit: Habit) -> String {
-        HabitCompletion.identifier(
-            habitID: habit.identifier,
-            dayKey: WeekCalendar.dayKey(for: selectedDate, calendar: calendar)
+    private func delayCompletedSectionMove(for habit: Habit, previousCount: Int) {
+        completionMoveState.scheduleMove(
+            for: habit.identifier,
+            previousCount: previousCount,
+            reduceMotion: accessibilityReduceMotion
         )
     }
-}
 
-private extension View {
-    // SwiftUI pins native List section headers in the plain style and exposes
-    // no opt-out on iOS 18. A regular list row preserves List swipe behavior
-    // while allowing the title to scroll naturally with its section.
-    func habitSectionHeaderRowStyle() -> some View {
-        frame(minHeight: 44)
-        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-        .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
-        .accessibilityAddTraits(.isHeader)
+    private func completionIdentifier(for habit: Habit) -> String {
+        HabitCompletionPeriod.identifier(
+            for: habit,
+            containing: selectedDate,
+            calendar: calendar
+        )
     }
 }

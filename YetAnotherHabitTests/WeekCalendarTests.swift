@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import YetAnotherHabit
 
+@MainActor
 struct WeekCalendarTests {
     private var calendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
@@ -44,6 +45,23 @@ struct WeekCalendarTests {
 
         #expect(WeekCalendar.mondayBasedWeekday(for: monday, calendar: calendar) == 0)
         #expect(WeekCalendar.mondayBasedWeekday(for: sunday, calendar: calendar) == 6)
+    }
+
+    @Test func dayKeyUsesStableGregorianComponents() throws {
+        let date = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 24))
+        )
+        var buddhistCalendar = Calendar(identifier: .buddhist)
+        buddhistCalendar.timeZone = calendar.timeZone
+
+        #expect(WeekCalendar.dayKey(for: date, calendar: buddhistCalendar) == "2026-08-24")
+        #expect(
+            WeekCalendar.date(
+                forDayKey: "2026-08-24",
+                calendar: buddhistCalendar
+            ) == date
+        )
+        #expect(WeekCalendar.date(forDayKey: "2026-02-31", calendar: calendar) == nil)
     }
 
     @Test func movingToFutureWeekSelectsMonday() throws {

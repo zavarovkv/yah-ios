@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct CalendarProgressRing: View {
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+
     let progress: Double
 
     var body: some View {
@@ -19,7 +21,10 @@ struct CalendarProgressRing: View {
             }
         }
         .frame(width: 42, height: 42)
-        .animation(.easeInOut(duration: 0.2), value: progress)
+        .animation(
+            accessibilityReduceMotion ? nil : .easeInOut(duration: 0.2),
+            value: progress
+        )
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }

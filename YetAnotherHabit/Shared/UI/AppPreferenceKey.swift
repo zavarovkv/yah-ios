@@ -4,4 +4,5 @@ enum AppPreferenceKey {
     static let faceIDEnabled = "faceIDEnabled"
     static let completedHabitsSectionExpanded = "completedHabitsSectionExpanded"
     static let countersSectionExpanded = "countersSectionExpanded"
+    static let dataMaintenanceVersion = "dataMaintenanceVersion"
 }

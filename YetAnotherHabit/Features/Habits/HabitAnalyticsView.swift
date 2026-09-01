@@ -4,11 +4,21 @@ import SwiftUI
 struct HabitAnalyticsView: View {
     @Environment(\.calendar) private var calendar
     @Environment(\.locale) private var locale
-    @Query(filter: #Predicate<HabitCompletion> { $0.isCompleted })
-    private var completions: [HabitCompletion]
+    @Query private var completions: [HabitCompletion]
 
     let habit: Habit
     let onEdit: () -> Void
+
+    init(habit: Habit, onEdit: @escaping () -> Void) {
+        let habitIdentifier = habit.identifier
+        _completions = Query(
+            filter: #Predicate<HabitCompletion> {
+                $0.count > 0 && $0.habit?.identifier == habitIdentifier
+            }
+        )
+        self.habit = habit
+        self.onEdit = onEdit
+    }
 
     var body: some View {
         let identifiers = completedIdentifiers
@@ -139,7 +149,7 @@ struct HabitAnalyticsView: View {
 
     private func totalValue(for snapshot: HabitAnalyticsCalculator.Snapshot) -> Int {
         habit.kind == .counter
-            ? completionCounts.values.reduce(0, +)
+            ? HabitCompletionIndex.totalCount(in: completionCounts)
             : snapshot.completedCount
     }
 

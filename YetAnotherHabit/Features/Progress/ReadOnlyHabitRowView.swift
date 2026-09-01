@@ -21,5 +21,14 @@ struct ReadOnlyHabitRowView: View {
         }
         .habitCardStyle(habit: habit, isCompleted: isCompleted)
         .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(habit.name))
+        .accessibilityValue(accessibilityValue)
+    }
+
+    private var accessibilityValue: Text {
+        if habit.kind == .counter {
+            return Text("Количество: \(count)")
+        }
+        return Text(isCompleted ? "Выполнено" : "Не выполнено")
     }
 }
